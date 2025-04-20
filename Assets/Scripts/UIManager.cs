@@ -1,3 +1,4 @@
+using Fusion;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,6 +16,8 @@ public class UIManager : MonoBehaviour
     public String Name => nameInputField.text;
     public Player LocalPlayer;
     public byte UIStack;
+    public GameObject LeaderboardScreen;
+    public MenuConnection _MenuConnection;
 
     [SerializeField] private GameObject inventoryScreen;
     [SerializeField] private GameObject pauseScreen;
@@ -31,6 +34,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Image chatBackground;
     [SerializeField] private Transform chatContent;
     [SerializeField] private GameObject chatMessagePrefab;
+    [SerializeField] private LeaderboardItem[] leaderboardItems;
 
     private PointerEventData pointerData;
     private List<RaycastResult> uiRaycasterResults = new();
@@ -95,6 +99,10 @@ public class UIManager : MonoBehaviour
             {
                 OpenChat(false);
             }
+            else if (LeaderboardScreen.activeSelf)
+            {
+                OpenLeaderboard(false);
+            }
             else if (inventoryScreen.activeSelf)
             {
                 OpenInventory(false);
@@ -121,10 +129,28 @@ public class UIManager : MonoBehaviour
             }
         }
 
+        if(Input.GetKeyDown(KeyCode.Tab))
+        {
+            if(UIStack == 0)
+            {
+                OpenLeaderboard(true);
+            }
+            else if (chatInputField.gameObject.activeSelf)
+            {
+
+            }
+            else if (LeaderboardScreen.activeSelf)
+            {
+                OpenLeaderboard(false);
+            }
+        }
+
         if (Input.GetMouseButtonDown(0) && EventSystem.current.currentSelectedGameObject != chatInputField.gameObject && EventSystem.current.currentSelectedGameObject != chatScrollbarVertical && chatInputField.gameObject.activeSelf)
         {
             OpenChat(false);
         }
+
+        CheckUIStack();
     }
 
     // 인벤토리 열기/닫기
@@ -144,8 +170,6 @@ public class UIManager : MonoBehaviour
             mouseImage.enabled = false;
             inventoryScreen.SetActive(false);
         }
-
-        CheckUIStack();
     }
 
     private void OpenPause(bool open)
@@ -160,8 +184,6 @@ public class UIManager : MonoBehaviour
             UIStack--;
             pauseScreen.SetActive(false);
         }
-
-        CheckUIStack();
     }
 
     private void OpenChat(bool open)
@@ -186,8 +208,20 @@ public class UIManager : MonoBehaviour
             chatBackground.enabled = false;
             HideChat();
         }
+    }
 
-        CheckUIStack();
+    private void OpenLeaderboard(bool open)
+    {
+        if (open)
+        {
+            UIStack++;
+            LeaderboardScreen.SetActive(true);
+        }
+        else
+        {
+            UIStack--;
+            LeaderboardScreen.SetActive(false);
+        }
     }
 
     private void CheckUIStack()
@@ -212,7 +246,7 @@ public class UIManager : MonoBehaviour
         mouseImage.transform.position = Input.mousePosition;
         pointerData.position = Input.mousePosition;
 
-        if (Input.GetMouseButtonDown(0) && !chatInputField.gameObject.activeSelf)
+        if (Input.GetMouseButtonDown(0) && !chatInputField.gameObject.activeSelf && !LeaderboardScreen.gameObject.activeSelf)
         {
             uiRaycasterResults.Clear();
             uiRaycaster.Raycast(pointerData, uiRaycasterResults);
@@ -263,7 +297,7 @@ public class UIManager : MonoBehaviour
         itemSlots[index].itemImage.enabled = itemImage != null;
     }
 
-    public void HideChatDirect()
+    private void HideChatDirect()
     {
         if (hideChatRoutine != null) StopCoroutine(HideChatRoutine());
         chatScreen.SetActive(false);
@@ -294,5 +328,47 @@ public class UIManager : MonoBehaviour
 
         chatScreen.SetActive(true);
         HideChat();
+    }
+
+    public void UpdateLeaderboard(KeyValuePair<Fusion.PlayerRef, Player>[] players)
+    {
+        for (int i = 0; i < leaderboardItems.Length; i++)
+        {
+            if (i < players.Length)
+            {
+                leaderboardItems[i].playerRef = players[i].Key;
+                leaderboardItems[i].nameText.text = players[i].Value.Name;
+                if (LocalPlayer.HasStateAuthority && leaderboardItems[i].playerRef != LocalPlayer.Runner.LocalPlayer)
+                {
+                    leaderboardItems[i].kickButton.gameObject.SetActive(true);
+                }
+                else
+                {
+                    leaderboardItems[i].kickButton.gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                leaderboardItems[i].playerRef = PlayerRef.None;
+                leaderboardItems[i].nameText.text = "";
+                leaderboardItems[i].kickButton.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    [Serializable]
+    private struct LeaderboardItem
+    {
+        public PlayerRef playerRef;
+        public TextMeshProUGUI nameText;
+        public Button kickButton;
+    }
+
+    public void KickPlayer(int index)
+    {
+        if (LocalPlayer != null)
+        {
+            LocalPlayer.RPC_KickPlayer(leaderboardItems[index].playerRef);
+        }
     }
 }

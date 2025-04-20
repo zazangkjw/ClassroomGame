@@ -301,4 +301,11 @@ public class Player : NetworkBehaviour
     {
         UIManager.Singleton.UpdateChat($"{Name}: {message}");
     }
+
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
+    public void RPC_KickPlayer(PlayerRef playerRef)
+    {
+        if (Runner.LocalPlayer == playerRef) { UIManager.Singleton._MenuConnection.LeaveSession(); }
+    }
 }

@@ -8,7 +8,21 @@ public class GameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 {
     [SerializeField] private NetworkPrefabRef playerPrefab;
 
-    [Networked, Capacity(12)] private NetworkDictionary<PlayerRef, Player> Players => default;
+    [Networked, Capacity(10)] private NetworkDictionary<PlayerRef, Player> Players => default;
+
+    public override void Spawned()
+    {
+        Runner.SetIsSimulated(Object, true);
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (Players.Count < 1)
+            return;
+
+        if (!Runner.IsResimulation && UIManager.Singleton.LeaderboardScreen.activeSelf)
+            UIManager.Singleton.UpdateLeaderboard(Players.ToArray());
+    }
 
     public void PlayerJoined(PlayerRef player)
     {

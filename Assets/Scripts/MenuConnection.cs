@@ -131,6 +131,5 @@ public class MenuConnection : MonoBehaviour
         SceneManager.LoadScene("Main");
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
-        UIManager.Singleton.HideChatDirect();
-}
+    }
 }
