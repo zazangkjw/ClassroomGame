@@ -42,12 +42,16 @@ public class Player : NetworkBehaviour
         }
 
         if (HasInputAuthority || HasStateAuthority)
+        {
             inventory = Enumerable.Repeat<Item>(null, inventorySize).ToList();
+        }
 
         if (HasInputAuthority)
         {
             foreach (MeshRenderer renderer in modelParts)
+            {
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+            }
 
             inputManager = Runner.GetComponent<InputManager>();
             Name = UIManager.Singleton.Name;
@@ -58,9 +62,13 @@ public class Player : NetworkBehaviour
             for (byte i = 0; i < inventorySize; i++)
             {
                 if (inventory[i] != null)
+                {
                     UIManager.Singleton.UpdateItemSlot(i, inventory[i].itemImage);
+                }
                 else
+                {
                     UIManager.Singleton.UpdateItemSlot(i, null);
+                }
             }  
         }
     }
@@ -145,7 +153,9 @@ public class Player : NetworkBehaviour
     private void CheckInteraction(NetInput input, Vector3 lookDirection)
     {
         if (!HasStateAuthority || !Runner.IsForward || !input.Buttons.WasPressed(PreviousButtons, InputButton.Interaction))
+        {
             return;
+        }
 
         if (Physics.Raycast(camTarget.position, lookDirection, out RaycastHit hitInfo, interactionRange))
         {
@@ -195,7 +205,10 @@ public class Player : NetworkBehaviour
     // 버릴 아이템 대기열
     private void CheckDropItem()
     {
-        if (!Runner.IsForward) return;
+        if (!Runner.IsForward)
+        {
+            return;
+        }
 
         while (DropItemIndexQueue.Count > 0)
         {
@@ -220,7 +233,9 @@ public class Player : NetworkBehaviour
         }
         
         if (HasInputAuthority)
+        {
             UIManager.Singleton.UpdateItemSlot(index, inventory[index].itemImage);
+        }
     }
 
     // 아이템 슬롯 바꾸기 RPC
@@ -229,7 +244,9 @@ public class Player : NetworkBehaviour
     {
         (inventory[index1], inventory[index2]) = (inventory[index2], inventory[index1]);
         if (HasStateAuthority && (index1 == currentQuickSlotIndex || index2 == currentQuickSlotIndex))
+        {
             equipItemFlag = true;
+        }
     }
 
     // 아이템 버리기 RPC
@@ -244,7 +261,9 @@ public class Player : NetworkBehaviour
             StartCoroutine(AttachOnParent(inventory[index], itemCategory, hand));
             inventory[index] = null;
             if (index == currentQuickSlotIndex)
+            {
                 equipItemFlag = true;
+            }
         }
         else
             inventory[index] = null;
@@ -262,7 +281,9 @@ public class Player : NetworkBehaviour
     private void CheckCurrentQuickSlot(NetInput input)
     {
         if (!HasStateAuthority)
+        {
             return;
+        }
 
         if (input.CurrentQuickSlotIndex != currentQuickSlotIndex)
         {

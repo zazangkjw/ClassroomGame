@@ -35,6 +35,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Transform chatContent;
     [SerializeField] private GameObject chatMessagePrefab;
     [SerializeField] private LeaderboardItem[] leaderboardItems;
+    [SerializeField] private GameObject kickPopUp;
+    [SerializeField] private TextMeshProUGUI kickPopUpMessage;
 
     private PointerEventData pointerData;
     private List<RaycastResult> uiRaycasterResults = new();
@@ -43,6 +45,7 @@ public class UIManager : MonoBehaviour
     private Coroutine hideChatRoutine;
     private Queue<GameObject> chatList = new();
     private GameObject chat;
+    private int selectedKickIndex;
 
     private void Awake()
     {
@@ -71,17 +74,15 @@ public class UIManager : MonoBehaviour
     private void OpenUI()
     {
         if (LocalPlayer == null)
+        {
             return;
+        }
 
         if (Input.GetKeyDown(KeyCode.I))
         {
             if(UIStack == 0)
             {
                 OpenInventory(true);
-            }
-            else if (chatInputField.gameObject.activeSelf)
-            {
-
             }
             else if (inventoryScreen.activeSelf)
             {
@@ -91,35 +92,38 @@ public class UIManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if(UIStack == 0)
+            if (UIStack == 0)
             {
                 OpenPause(true);
             }
-            else if (chatInputField.gameObject.activeSelf)
+            else
             {
-                OpenChat(false);
-            }
-            else if (LeaderboardScreen.activeSelf)
-            {
-                OpenLeaderboard(false);
-            }
-            else if (inventoryScreen.activeSelf)
-            {
-                OpenInventory(false);
-            }
-            else if (pauseScreen.activeSelf)
-            {
-                OpenPause(false);
+                if (chatInputField.gameObject.activeSelf)
+                {
+                    OpenChat(false);
+                }
+                else if (kickPopUp.activeSelf)
+                {
+                    OpenKickPopUp(false);
+                }
+                else if (LeaderboardScreen.activeSelf)
+                {
+                    OpenLeaderboard(false);
+                }
+                else if (inventoryScreen.activeSelf)
+                {
+                    OpenInventory(false);
+                }
+                else if (pauseScreen.activeSelf)
+                {
+                    OpenPause(false);
+                }
             }
         }
 
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            if (!chatInputField.gameObject.activeSelf)
-            {
-                OpenChat(true);
-            }
-            else
+            if (chatInputField.gameObject.activeSelf)
             {
                 if (!chatInputField.text.IsNullOrEmpty())
                 {
@@ -127,25 +131,35 @@ public class UIManager : MonoBehaviour
                 }
                 OpenChat(false);
             }
+            else if (!kickPopUp.activeSelf)
+            {
+                OpenChat(true);
+            }
+            else
+            {
+                KickPlayer();
+            }
         }
 
         if(Input.GetKeyDown(KeyCode.Tab))
         {
-            if(UIStack == 0)
+            if (UIStack == 0)
             {
                 OpenLeaderboard(true);
-            }
-            else if (chatInputField.gameObject.activeSelf)
-            {
-
             }
             else if (LeaderboardScreen.activeSelf)
             {
                 OpenLeaderboard(false);
+                if (kickPopUp.activeSelf)
+                {
+                    OpenKickPopUp(false);
+                }
             }
         }
 
-        if (Input.GetMouseButtonDown(0) && EventSystem.current.currentSelectedGameObject != chatInputField.gameObject && EventSystem.current.currentSelectedGameObject != chatScrollbarVertical && chatInputField.gameObject.activeSelf)
+        if (Input.GetMouseButtonDown(0) && chatInputField.gameObject.activeSelf && 
+            EventSystem.current.currentSelectedGameObject != chatInputField.gameObject && 
+            EventSystem.current.currentSelectedGameObject != chatScrollbarVertical)
         {
             OpenChat(false);
         }
@@ -157,13 +171,13 @@ public class UIManager : MonoBehaviour
     private void OpenInventory(bool open)
     {
         // ¿­±â
-        if (open)
+        if (open && !inventoryScreen.activeSelf)
         {
             UIStack++;
             inventoryScreen.SetActive(true);
         }
         // ´Ý±â
-        else
+        else if (!open && inventoryScreen.activeSelf)
         {
             UIStack--;
             mouseImage.sprite = null;
@@ -174,12 +188,12 @@ public class UIManager : MonoBehaviour
 
     private void OpenPause(bool open)
     {
-        if (open)
+        if (open && !pauseScreen.activeSelf)
         {
             UIStack++;
             pauseScreen.SetActive(true);
         }
-        else
+        else if (!open && pauseScreen.activeSelf)
         {
             UIStack--;
             pauseScreen.SetActive(false);
@@ -188,7 +202,7 @@ public class UIManager : MonoBehaviour
 
     private void OpenChat(bool open)
     {
-        if (open)
+        if (open && !chatInputField.gameObject.activeSelf)
         {
             UIStack++;
             chatScreen.SetActive(true);
@@ -199,7 +213,7 @@ public class UIManager : MonoBehaviour
             chatBackground.enabled = true;
             if (hideChatRoutine != null) StopCoroutine(hideChatRoutine);
         }
-        else
+        else if (!open && chatInputField.gameObject.activeSelf)
         {
             UIStack--;
             chatInputField.text = null;
@@ -212,15 +226,30 @@ public class UIManager : MonoBehaviour
 
     private void OpenLeaderboard(bool open)
     {
-        if (open)
+        if (open && !LeaderboardScreen.activeSelf)
         {
             UIStack++;
             LeaderboardScreen.SetActive(true);
         }
-        else
+        else if (!open && LeaderboardScreen.activeSelf)
         {
             UIStack--;
             LeaderboardScreen.SetActive(false);
+        }
+    }
+
+    public void OpenKickPopUp(bool open)
+    {
+        if (open && !kickPopUp.activeSelf)
+        {
+            UIStack++;
+            kickPopUp.SetActive(true);
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+        else if(!open && kickPopUp.activeSelf)
+        {
+            UIStack--;
+            kickPopUp.SetActive(false);
         }
     }
 
@@ -299,13 +328,21 @@ public class UIManager : MonoBehaviour
 
     private void HideChatDirect()
     {
-        if (hideChatRoutine != null) StopCoroutine(HideChatRoutine());
+        if (hideChatRoutine != null)
+        {
+            StopCoroutine(HideChatRoutine());
+        }
+
         chatScreen.SetActive(false);
     }
 
     private void HideChat()
     {
-        if (hideChatRoutine != null) StopCoroutine(HideChatRoutine());
+        if (hideChatRoutine != null)
+        {
+            StopCoroutine(HideChatRoutine());
+        }
+
         hideChatRoutine = StartCoroutine(HideChatRoutine());
     }
 
@@ -364,11 +401,22 @@ public class UIManager : MonoBehaviour
         public Button kickButton;
     }
 
-    public void KickPlayer(int index)
+    public void SelectKickPlayer(int index)
     {
         if (LocalPlayer != null)
         {
-            LocalPlayer.RPC_KickPlayer(leaderboardItems[index].playerRef);
+            selectedKickIndex = index;
+            kickPopUpMessage.text = $"Kick \'{leaderboardItems[selectedKickIndex].nameText.text}\'?";
+            OpenKickPopUp(true);
+        }
+    }
+
+    public void KickPlayer()
+    {
+        if (LocalPlayer != null)
+        {
+            LocalPlayer.RPC_KickPlayer(leaderboardItems[selectedKickIndex].playerRef);
+            OpenKickPopUp(false);
         }
     }
 }
