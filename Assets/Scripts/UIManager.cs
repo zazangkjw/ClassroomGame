@@ -186,7 +186,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private void OpenPause(bool open)
+    public void OpenPause(bool open)
     {
         if (open && !pauseScreen.activeSelf)
         {
@@ -197,6 +197,7 @@ public class UIManager : MonoBehaviour
         {
             UIStack--;
             pauseScreen.SetActive(false);
+            EventSystem.current.SetSelectedGameObject(null);
         }
     }
 
