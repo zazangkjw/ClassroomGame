@@ -954,7 +954,6 @@ MonoBehaviour:
   lagCompLayers:
     serializedVersion: 2
     m_Bits: 1
-  kcc: {fileID: 1994501053748967507}
   camTarget: {fileID: 8716817890841864573}
   source: {fileID: 8221385303638908559}
   maxPitch: 85
@@ -962,7 +961,10 @@ MonoBehaviour:
   jumpImpulse: {x: 0, y: 10, z: 0}
   interactionRange: 5
   inventory: []
+  inventorySize: 12
   hand: {fileID: 5200030936047140849}
+  Kcc: {fileID: 1994501053748967507}
+  IsReady: 0
   _Name: 
 --- !u!114 &1994501053748967507
 MonoBehaviour:

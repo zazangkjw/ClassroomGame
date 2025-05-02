@@ -11,7 +11,6 @@ public class Player : NetworkBehaviour
 {
     [SerializeField] private MeshRenderer[] modelParts;
     [SerializeField] private LayerMask lagCompLayers;
-    [SerializeField] private KCC kcc;
     [SerializeField] private Transform camTarget;
     [SerializeField] private AudioSource source;
     [SerializeField] private float maxPitch = 85f;
@@ -22,10 +21,13 @@ public class Player : NetworkBehaviour
     [SerializeField] private byte inventorySize = 12;
     [SerializeField] private Transform hand;
 
+    public KCC Kcc;
     public Queue<byte> DropItemIndexQueue = new();
+    public bool IsReady;
 
     [Networked] public string Name { get; private set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
+    [Networked] private bool BlockMovement { get; set; }
     [Networked, OnChangedRender(nameof(Jumped))] private int JumpSync { get; set; }
 
     private InputManager inputManager;
@@ -33,7 +35,7 @@ public class Player : NetworkBehaviour
     private byte currentQuickSlotIndex;
     private bool equipItemFlag;
     private Transform itemCategory;
-  
+
     public override void Spawned()
     {
         if (HasStateAuthority)
@@ -91,25 +93,29 @@ public class Player : NetworkBehaviour
 
         if (GetInput(out NetInput input))
         {
-            CheckJump(input);
-            kcc.AddLookRotation(input.LookDelta * lookSensitivity, -maxPitch, maxPitch);
+            if (!BlockMovement)
+            {
+                CheckJump(input);
+                SetInputDirection(input);
+            }
+            
+            Kcc.AddLookRotation(input.LookDelta * lookSensitivity, -maxPitch, maxPitch);
             UpdateCamTarget();
             Vector3 lookDirection = camTarget.forward;
             CheckInteraction(input, lookDirection);
             CheckCurrentQuickSlot(input);
 
-            SetInputDirection(input);
             PreviousButtons = input.Buttons;
-            baseLookRotation = kcc.GetLookRotation();
+            baseLookRotation = Kcc.GetLookRotation();
         }
     }
 
     public override void Render()
     {
-        if (kcc.IsPredictingLookRotation)
+        if (Kcc.IsPredictingLookRotation)
         {
             Vector2 predictedLookRotation = baseLookRotation + inputManager.AccumulatedMouseDelta * lookSensitivity;
-            kcc.SetLookRotation(predictedLookRotation, -maxPitch, maxPitch);
+            Kcc.SetLookRotation(predictedLookRotation, -maxPitch, maxPitch);
         }
         UpdateCamTarget();
     }
@@ -118,9 +124,9 @@ public class Player : NetworkBehaviour
     {
         if (input.Buttons.WasPressed(PreviousButtons, InputButton.Jump))
         {
-            if (kcc.FixedData.IsGrounded)
+            if (Kcc.FixedData.IsGrounded)
             {
-                kcc.Jump(jumpImpulse);
+                Kcc.Jump(jumpImpulse);
                 JumpSync++;
             }
         }
@@ -129,13 +135,13 @@ public class Player : NetworkBehaviour
     private void SetInputDirection(NetInput input)
     {
         Vector3 worldDirection;
-        worldDirection = kcc.FixedData.TransformRotation * input.Direction.X0Y();
-        kcc.SetInputDirection(worldDirection);
+        worldDirection = Kcc.FixedData.TransformRotation * input.Direction.X0Y();
+        Kcc.SetInputDirection(worldDirection);
     }
 
     private void UpdateCamTarget()
     {
-        camTarget.localRotation = Quaternion.Euler(kcc.GetLookRotation().x, 0f, 0f);
+        camTarget.localRotation = Quaternion.Euler(Kcc.GetLookRotation().x, 0f, 0f);
     }
 
     private void Jumped()
@@ -163,6 +169,10 @@ public class Player : NetworkBehaviour
             if (hitInfo.collider.TryGetComponent(out Item item))
             {
                 GetItem(item);
+            }
+            else if(hitInfo.collider.TryGetComponent(out IInteractable interactable))
+            {
+                interactable.Interact(this);
             }
         }
     }
@@ -328,5 +338,19 @@ public class Player : NetworkBehaviour
     public void RPC_KickPlayer(PlayerRef playerRef)
     {
         if (Runner.LocalPlayer == playerRef) { UIManager.Singleton._MenuConnection.LeaveSession(); }
+    }
+
+    public void SetBlockMovement(bool blocked)
+    {
+        BlockMovement = blocked;
+    }
+
+    public void Teleport(Vector3 position, Quaternion rotation, bool preservePitch = false, bool preserveYaw = false)
+    {
+        if(Runner.IsForward)
+        {
+            Kcc.SetPosition(position);
+            Kcc.SetLookRotation(rotation, preservePitch, preserveYaw);
+        }
     }
 }
