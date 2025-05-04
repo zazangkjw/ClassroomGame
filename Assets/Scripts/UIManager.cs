@@ -18,6 +18,7 @@ public class UIManager : MonoBehaviour
     public byte UIStack;
     public GameObject LeaderboardScreen;
     public MenuConnection _MenuConnection;
+    public TextMeshProUGUI CountdownText;
 
     [SerializeField] private GameObject inventoryScreen;
     [SerializeField] private GameObject pauseScreen;

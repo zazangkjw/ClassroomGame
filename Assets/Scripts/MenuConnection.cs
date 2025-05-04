@@ -8,6 +8,7 @@ using WebSocketSharp;
 
 public class MenuConnection : MonoBehaviour
 {
+    public string TestSceneName;
     public string SessionName;
     public List<SessionInfo> SessionList = new List<SessionInfo>();
     public bool DoRefresh;
@@ -24,6 +25,35 @@ public class MenuConnection : MonoBehaviour
     [SerializeField] private Transform roomListContent;
 
     private NetworkRunner runner;
+
+    private void Start()
+    {
+        if (!TestSceneName.IsNullOrEmpty())
+        {
+            onSessionConnected.Invoke();
+            StartTest();
+        }
+    }
+
+    public async void StartTest()
+    {
+        runner = Instantiate(runnerPrefab);
+
+        await runner.StartGame(new StartGameArgs()
+        {
+            GameMode = GameMode.AutoHostOrClient,
+            SessionName = "Test",
+            SceneManager = runner.GetComponent<NetworkSceneManagerDefault>(),
+        });
+
+        if (runner.GameMode == GameMode.Host)
+        {
+            await runner.LoadScene(TestSceneName);
+        }
+
+        onSessionConnected.Invoke();
+        UIManager.Singleton.UIStack = 0;
+    }
 
     public void SelectRoom(string roomName)
     {
