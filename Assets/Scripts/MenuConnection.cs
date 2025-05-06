@@ -120,7 +120,7 @@ public class MenuConnection : MonoBehaviour
                 //Scene = sceneInfo
             });
 
-            await runner.LoadScene("Game");
+            await runner.LoadScene("Lobby");
             onSessionConnected.Invoke();
             UIManager.Singleton.UIStack = 0;
         }

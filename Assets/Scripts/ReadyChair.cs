@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class ReadyChair : MonoBehaviour, IInteractable
 {
+    [SerializeField] Transform target;
+
     private Player owner;
 
     public void Interact(Player player)
@@ -14,7 +16,7 @@ public class ReadyChair : MonoBehaviour, IInteractable
             owner = player;
             player.IsReady = true;
             player.SetBlockMovement(true);
-            player.Teleport(transform.position.OnlyXZ(), transform.rotation);
+            player.Teleport(transform.position.OnlyXZ(), Quaternion.LookRotation(target.position.OnlyXZ() - player.CamTarget.position.OnlyXZ()));
         }
         else if (owner == player)
         {

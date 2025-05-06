@@ -11,7 +11,6 @@ public class Player : NetworkBehaviour
 {
     [SerializeField] private MeshRenderer[] modelParts;
     [SerializeField] private LayerMask lagCompLayers;
-    [SerializeField] private Transform camTarget;
     [SerializeField] private AudioSource source;
     [SerializeField] private float maxPitch = 85f;
     [SerializeField] private float lookSensitivity = 0.15f;
@@ -22,6 +21,7 @@ public class Player : NetworkBehaviour
     [SerializeField] private Transform hand;
 
     public KCC Kcc;
+    public Transform CamTarget;
     public Queue<byte> DropItemIndexQueue = new();
     public bool IsReady;
 
@@ -52,13 +52,14 @@ public class Player : NetworkBehaviour
         {
             foreach (MeshRenderer renderer in modelParts)
             {
-                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+                renderer.enabled = false;
+                //renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
             }
 
             inputManager = Runner.GetComponent<InputManager>();
             Name = UIManager.Singleton.Name;
             RPC_PlayerName(Name);
-            CameraFollow.Singleton.SetTarget(camTarget, this);
+            CameraFollow.Singleton.SetTarget(CamTarget, this);
             UIManager.Singleton.LocalPlayer = this;
 
             for (byte i = 0; i < inventorySize; i++)
@@ -101,7 +102,7 @@ public class Player : NetworkBehaviour
             
             Kcc.AddLookRotation(input.LookDelta * lookSensitivity, -maxPitch, maxPitch);
             UpdateCamTarget();
-            Vector3 lookDirection = camTarget.forward;
+            Vector3 lookDirection = CamTarget.forward;
             CheckInteraction(input, lookDirection);
             CheckCurrentQuickSlot(input);
 
@@ -141,7 +142,7 @@ public class Player : NetworkBehaviour
 
     private void UpdateCamTarget()
     {
-        camTarget.localRotation = Quaternion.Euler(Kcc.GetLookRotation().x, 0f, 0f);
+        CamTarget.localRotation = Quaternion.Euler(Kcc.GetLookRotation().x, 0f, 0f);
     }
 
     private void Jumped()
@@ -163,7 +164,7 @@ public class Player : NetworkBehaviour
             return;
         }
 
-        if (Physics.Raycast(camTarget.position, lookDirection, out RaycastHit hitInfo, interactionRange))
+        if (Physics.Raycast(CamTarget.position, lookDirection, out RaycastHit hitInfo, interactionRange))
         {
             // 아이템 줍기
             if (hitInfo.collider.TryGetComponent(out Item item))

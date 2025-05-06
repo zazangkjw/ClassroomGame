@@ -1,0 +1,28 @@
+Sample Rate Setting: Optimize Sample Rate
+
+[BGM]
+Load Type: Streaming
+Compression Format: Vorbis
+Quality: 70
+
+[음성]
+Load Type: Compressed In Memory / Streaming
+Compression Format: Vorbis
+Quality: 70
+
+[타격음이나 발사음 등 짧고 자주 쓰이며 레이턴시가 중요한 효과음]
+Load Type: Decompress On Load
+Compression Format: PCM
+
+[폭발음 등 다소 긴 편이며 둔탁한 효과음]
+Load Type: Compressed In Memory
+Compression Format: ADPCM
+Sample Rate: 11025 Hz 이하
+
+[징글]
+Load Type: Compressed In Memory
+Compression Format: ADPCM / Vorbis(Quality: 70)
+
+[환경음]
+Load Type: Compressed In Memory
+Compression Format: ADPCM / Vorbis(Quality: 70)

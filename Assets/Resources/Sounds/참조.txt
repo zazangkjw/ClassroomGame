@@ -1,0 +1,18 @@
+[Bgm]
+
+
+
+
+[Sfx]
+"Thunder_close.wav" by hantorio of Freesound.org
+
+
+
+[Ambient]
+"Rain on Windows, Interior, A.wav" by InspectorJ (www.jshaw.co.uk) of Freesound.org
+
+
+
+
+.
+

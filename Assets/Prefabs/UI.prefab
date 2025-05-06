@@ -7867,7 +7867,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f52f0f0670533d479f361dd6b979595, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TestSceneName: Game
+  TestSceneName: 
   SessionName: 
   DoRefresh: 0
   runnerPrefab: {fileID: 4779440297879285836, guid: 9a993296db27cfb4297d4e76ab01e50d,
