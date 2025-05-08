@@ -72,7 +72,7 @@ public class Player : NetworkBehaviour
                 {
                     UIManager.Singleton.UpdateItemSlot(i, null);
                 }
-            }  
+            }
         }
     }
 
@@ -99,7 +99,7 @@ public class Player : NetworkBehaviour
                 CheckJump(input);
                 SetInputDirection(input);
             }
-            
+
             Kcc.AddLookRotation(input.LookDelta * lookSensitivity, -maxPitch, maxPitch);
             UpdateCamTarget();
             Vector3 lookDirection = CamTarget.forward;
@@ -171,7 +171,7 @@ public class Player : NetworkBehaviour
             {
                 GetItem(item);
             }
-            else if(hitInfo.collider.TryGetComponent(out IInteractable interactable))
+            else if (hitInfo.collider.TryGetComponent(out IInteractable interactable))
             {
                 interactable.Interact(this);
             }
@@ -242,7 +242,7 @@ public class Player : NetworkBehaviour
             if (index == currentQuickSlotIndex)
                 equipItemFlag = true;
         }
-        
+
         if (HasInputAuthority)
         {
             UIManager.Singleton.UpdateItemSlot(index, inventory[index].itemImage);
@@ -302,7 +302,7 @@ public class Player : NetworkBehaviour
             equipItemFlag = true;
         }
 
-        if(equipItemFlag)
+        if (equipItemFlag)
         {
             EquipItem(currentQuickSlotIndex);
             equipItemFlag = false;
@@ -328,7 +328,7 @@ public class Player : NetworkBehaviour
         }
     }
 
-    [Rpc(RpcSources.InputAuthority | RpcSources.StateAuthority, RpcTargets.All)]
+    [Rpc(RpcSources.StateAuthority | RpcSources.InputAuthority, RpcTargets.All)]
     public void RPC_PlayerSendMessage(string message)
     {
         UIManager.Singleton.UpdateChat($"{Name}: {message}");
@@ -348,10 +348,46 @@ public class Player : NetworkBehaviour
 
     public void Teleport(Vector3 position, Quaternion rotation, bool preservePitch = false, bool preserveYaw = false)
     {
-        if(Runner.IsForward)
+        if (Runner.IsForward)
         {
             Kcc.SetPosition(position);
             Kcc.SetLookRotation(rotation, preservePitch, preserveYaw);
         }
+    }
+
+    public void OpenProjector()
+    {
+        if (HasInputAuthority && UIManager.Singleton.UIStack == 0)
+        {
+            UIManager.Singleton.OpenProjector(true);
+        }
+        else
+        {
+            RPC_OpenProjector();
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    private void RPC_OpenProjector()
+    {
+        OpenProjector();
+    }
+
+    public void SelectVideo(byte index)
+    {
+        if (HasStateAuthority)
+        {
+            GameStateManager.Singleton.SelectedVideoIndex = index;
+        }
+        else if (HasInputAuthority)
+        {
+            RPC_SelectVideo(index);
+        }
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RPC_SelectVideo(byte index)
+    {
+        SelectVideo(index);
     }
 }

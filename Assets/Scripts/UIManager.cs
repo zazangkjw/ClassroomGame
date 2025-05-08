@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using WebSocketSharp;
 
@@ -19,8 +18,14 @@ public class UIManager : MonoBehaviour
     public GameObject LeaderboardScreen;
     public MenuConnection _MenuConnection;
     public TextMeshProUGUI CountdownText;
+    public List<string> VideoList = new();
+    public List<string> VideoListOriginal = new List<string>
+    {
+        "A",
+        "B"
+    };
 
-    [SerializeField] private GameObject inventoryScreen;
+[SerializeField] private GameObject inventoryScreen;
     [SerializeField] private GameObject pauseScreen;
     [SerializeField] private TMP_InputField nameInputField;
     [SerializeField] private List<Slot> itemSlots = new();
@@ -38,6 +43,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private LeaderboardItem[] leaderboardItems;
     [SerializeField] private GameObject kickPopUp;
     [SerializeField] private TextMeshProUGUI kickPopUpMessage;
+    [SerializeField] private GameObject projectorScreen;
 
     private PointerEventData pointerData;
     private List<RaycastResult> uiRaycasterResults = new();
@@ -64,12 +70,19 @@ public class UIManager : MonoBehaviour
         {
             itemSlots[i].slotIndex = i;
         }
+
+        VideoList = VideoListOriginal; // 언어별 비디오 이름 적용하기
     }
 
     private void Update()
     {
         InventoryInteraction();
         OpenUI();
+    }
+
+    public void UnFocus()
+    {
+        EventSystem.current.SetSelectedGameObject(null);
     }
 
     private void OpenUI()
@@ -102,6 +115,10 @@ public class UIManager : MonoBehaviour
                 if (chatInputField.gameObject.activeSelf)
                 {
                     OpenChat(false);
+                }
+                else if (projectorScreen.activeSelf)
+                {
+                    OpenProjector(false);
                 }
                 else if (kickPopUp.activeSelf)
                 {
@@ -252,6 +269,21 @@ public class UIManager : MonoBehaviour
         {
             UIStack--;
             kickPopUp.SetActive(false);
+        }
+    }
+
+    public void OpenProjector(bool open)
+    {
+        if (open && !projectorScreen.activeSelf)
+        {
+            UIStack++;
+            projectorScreen.SetActive(true);
+        }
+        else if (!open && projectorScreen.activeSelf)
+        {
+            UIStack--;
+            projectorScreen.SetActive(false);
+            EventSystem.current.SetSelectedGameObject(null);
         }
     }
 
@@ -420,5 +452,10 @@ public class UIManager : MonoBehaviour
             LocalPlayer.RPC_KickPlayer(leaderboardItems[selectedKickIndex].playerRef);
             OpenKickPopUp(false);
         }
+    }
+
+    public void SelectVideo(int index)
+    {
+        LocalPlayer.SelectVideo(((byte)index));
     }
 }

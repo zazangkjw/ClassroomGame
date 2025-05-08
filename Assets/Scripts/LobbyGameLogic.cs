@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 
 public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
@@ -13,23 +14,26 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [SerializeField] private Light thunderLight;
     [SerializeField] private AudioSource thunderSfx;
     [SerializeField] private VideoPlayer countdownVideo;
+    [SerializeField] private TextMeshProUGUI projectorText;
 
     [Networked, Capacity(10)] private NetworkDictionary<PlayerRef, Player> Players => default;
+    [Networked, OnChangedRender(nameof(Thunder))] private byte ThunderSync {  get; set; }
 
+    private Coroutine thunderRoutine;
     private WaitForSeconds oneSeconds = new WaitForSeconds(1);
     private WaitForSeconds thunderDelay1 = new WaitForSeconds(5f);
     private WaitForSeconds thunderDelay2 = new WaitForSeconds(0.1f);
     private bool isCountdown;
 
-    private void Start()
-    {
-        StartCoroutine(ThunderRoutine());
-        countdownVideo.loopPointReached += OnCountdownEnd;
-    }
-
     public override void Spawned()
     {
         Runner.SetIsSimulated(Object, true);
+        countdownVideo.loopPointReached += OnCountdownEnd;
+
+        if (HasStateAuthority)
+        {
+            StartCoroutine(WaitThunderRoutine());
+        }
     }
 
     public override void FixedUpdateNetwork()
@@ -44,6 +48,8 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         {
             CheckReady();
         }
+
+        UpdateProjectorText();
     }
 
     public void PlayerJoined(PlayerRef player)
@@ -93,6 +99,7 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [Rpc(RpcSources.StateAuthority, RpcTargets.StateAuthority | RpcTargets.Proxies)]
     private void RPC_StartCountDown()
     {
+        projectorText.gameObject.SetActive(false);
         countdownVideo.gameObject.SetActive(true);
         countdownVideo.Play();
     }
@@ -100,6 +107,7 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [Rpc(RpcSources.StateAuthority, RpcTargets.StateAuthority | RpcTargets.Proxies)]
     private void RPC_EndCountDown()
     {
+        projectorText.gameObject.SetActive(true);
         countdownVideo.gameObject.SetActive(false);
         countdownVideo.Stop();
     }
@@ -114,28 +122,52 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         // ¾À ÀüÈ¯
         if (HasStateAuthority)
         {
-            Debug.Log("¾À ÀüÈ¯");
+            Debug.Log(GameStateManager.Singleton.SelectedVideoIndex);
+            //SceneManager.LoadScene(UIManager.Singleton.VideoListOriginal[GameStateManager.Singleton.SelectedVideoIndex]);
         }
     }
 
-    private IEnumerator ThunderRoutine()
+    private IEnumerator WaitThunderRoutine()
     {
         while (true)
         {
             yield return thunderDelay1;
-            thunderLight.enabled = true;
-            yield return thunderDelay2;
-            yield return thunderDelay2;
-            yield return thunderDelay2;
-            thunderLight.enabled = false;
-            yield return thunderDelay2;
-            thunderLight.enabled = true;
-            yield return thunderDelay2;
-            yield return thunderDelay2;
-            thunderLight.enabled = false;
+            Thunder();
+            ThunderSync = (byte)((ThunderSync + 1) % 2);
+        }
+    }
 
-            yield return oneSeconds;
-            thunderSfx.Play();
+    private void Thunder()
+    {
+        if (thunderRoutine != null)
+        {
+            StopCoroutine(thunderRoutine);
+        }
+        thunderRoutine = StartCoroutine(ThunderRoutine());
+    }
+
+    private IEnumerator ThunderRoutine()
+    {
+        thunderLight.enabled = true;
+        yield return thunderDelay2;
+        yield return thunderDelay2;
+        yield return thunderDelay2;
+        thunderLight.enabled = false;
+        yield return thunderDelay2;
+        thunderLight.enabled = true;
+        yield return thunderDelay2;
+        yield return thunderDelay2;
+        thunderLight.enabled = false;
+
+        yield return oneSeconds;
+        thunderSfx.Play();
+    }
+
+    private void UpdateProjectorText()
+    {
+        if (projectorText.text != UIManager.Singleton.VideoList[GameStateManager.Singleton.SelectedVideoIndex])
+        {
+            projectorText.text = UIManager.Singleton.VideoList[GameStateManager.Singleton.SelectedVideoIndex];
         }
     }
 }
