@@ -3,15 +3,16 @@ using UnityEngine;
 
 public class Item : NetworkBehaviour
 {
-    [Networked] public bool IsHideVisual { get; set; }
-    [Networked] public bool IsHideCollider { get; set; }
+    [Networked, OnChangedRender(nameof(Hide))] public bool IsHideVisual { get; set; }
+    [Networked, OnChangedRender(nameof(Hide))] public bool IsHideCollider { get; set; }
 
     [SerializeField] private MeshRenderer[] visuals;
     [SerializeField] private Collider[] colliders;
 
     public Sprite itemImage;
+    public virtual string itemName => "E";
 
-    public override void Render()
+    public override void Spawned()
     {
         Hide();
     }

@@ -15,6 +15,7 @@ public class UIManager : MonoBehaviour
     public String Name => nameInputField.text;
     public Player LocalPlayer;
     public byte UIStack;
+    public TextMeshProUGUI MouseText;
     public GameObject LeaderboardScreen;
     public MenuConnection _MenuConnection;
     public TextMeshProUGUI CountdownText;
@@ -25,7 +26,7 @@ public class UIManager : MonoBehaviour
         "B"
     };
 
-[SerializeField] private GameObject inventoryScreen;
+    [SerializeField] private GameObject inventoryScreen;
     [SerializeField] private GameObject pauseScreen;
     [SerializeField] private TMP_InputField nameInputField;
     [SerializeField] private List<Slot> itemSlots = new();
@@ -44,6 +45,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject kickPopUp;
     [SerializeField] private TextMeshProUGUI kickPopUpMessage;
     [SerializeField] private GameObject projectorScreen;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip pointerEnterSound;
+    [SerializeField] private AudioClip onClickSound;
 
     private PointerEventData pointerData;
     private List<RaycastResult> uiRaycasterResults = new();
@@ -457,5 +461,15 @@ public class UIManager : MonoBehaviour
     public void SelectVideo(int index)
     {
         LocalPlayer.SelectVideo(((byte)index));
+    }
+
+    public void PlayPointerEnterSound()
+    {
+        audioSource.PlayOneShot(pointerEnterSound);
+    }
+
+    public void PlayOnClickSound()
+    {
+        audioSource.PlayOneShot(onClickSound);
     }
 }

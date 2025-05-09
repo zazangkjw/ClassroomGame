@@ -27,8 +27,9 @@ public class Player : NetworkBehaviour
 
     [Networked] public string Name { get; private set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
-    [Networked] private bool BlockMovement { get; set; }
     [Networked, OnChangedRender(nameof(Jumped))] private int JumpSync { get; set; }
+    [Networked, OnChangedRender(nameof(Hide))] public bool IsHideCollider { get; set; }
+    [Networked] public bool IsBlockMovement { get; set; }
 
     private InputManager inputManager;
     private Vector2 baseLookRotation;
@@ -87,17 +88,25 @@ public class Player : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (HasInputAuthority)
-        {
-            CheckDropItem();
-        }
-
+        // 호스트, 입력 권한 가진 클라이언트 둘 다 실행됨
         if (GetInput(out NetInput input))
         {
-            if (!BlockMovement)
+            if (!IsBlockMovement)
             {
                 CheckJump(input);
                 SetInputDirection(input);
+            }
+            else
+            {
+                Kcc.SetInputDirection(Vector3.zero); // 이동 멈추기
+
+                // 점프 중이면 강제로 낙하하게 만들기
+                if (!Kcc.FixedData.IsGrounded && Kcc.FixedData.DynamicVelocity.y > 0f)
+                {
+                    Vector3 velocity = Kcc.FixedData.DynamicVelocity;
+                    velocity.y = 0f;
+                    Kcc.SetDynamicVelocity(velocity);
+                }
             }
 
             Kcc.AddLookRotation(input.LookDelta * lookSensitivity, -maxPitch, maxPitch);
@@ -109,6 +118,11 @@ public class Player : NetworkBehaviour
             PreviousButtons = input.Buttons;
             baseLookRotation = Kcc.GetLookRotation();
         }
+
+        if (HasInputAuthority && Runner.IsForward)
+        {
+            CheckDropItem();
+        }
     }
 
     public override void Render()
@@ -119,6 +133,11 @@ public class Player : NetworkBehaviour
             Kcc.SetLookRotation(predictedLookRotation, -maxPitch, maxPitch);
         }
         UpdateCamTarget();
+
+        if (HasInputAuthority)
+        {
+            CheckInteractionLocal(CamTarget.forward);
+        }
     }
 
     private void CheckJump(NetInput input)
@@ -171,34 +190,78 @@ public class Player : NetworkBehaviour
             {
                 GetItem(item);
             }
-            else if (hitInfo.collider.TryGetComponent(out IInteractable interactable))
+            // 상호작용 오브젝트
+            else if (hitInfo.collider.TryGetComponent(out Interactable interactable))
             {
-                interactable.Interact(this);
+                interactable.InteractServer(this);
             }
+        }
+    }
+
+    private void CheckInteractionLocal(Vector3 lookDirection)
+    {
+        if (Physics.Raycast(CamTarget.position, lookDirection, out RaycastHit hitInfo, interactionRange))
+        {
+            // UI가 열려 있으면 텍스트만 초기화하고 끝냄
+            if (UIManager.Singleton.UIStack != 0)
+            {
+                UIManager.Singleton.MouseText.text = "";
+                return;
+            }
+
+            // 아이템
+            if (hitInfo.collider.TryGetComponent(out Item item))
+            {
+                UIManager.Singleton.MouseText.text = item.itemName;
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    // 인벤토리 꽉참 메시지
+                }
+            }
+            // 상호작용 오브젝트
+            else if (hitInfo.collider.TryGetComponent(out Interactable interactable))
+            {
+                UIManager.Singleton.MouseText.text = interactable.interactableName;
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    interactable.InteractLocal(this);
+                }
+            }
+            else
+            {
+                UIManager.Singleton.MouseText.text = "";
+            }
+        }
+        else
+        {
+            UIManager.Singleton.MouseText.text = "";
         }
     }
 
     // 아이템 획득
     private void GetItem(Item item)
     {
-        // 현재 선택된 퀵슬롯이 비어있으면 해당 퀵슬롯에 아이템 획득
-        if (inventory[currentQuickSlotIndex] == null)
+        if (HasStateAuthority)
         {
-            RPC_GetItem(currentQuickSlotIndex, item.GetComponent<NetworkObject>());
-            return;
-        }
-
-        // 인벤토리에 아이템 획득
-        for (byte i = 0; i < inventory.Count; i++)
-        {
-            if (inventory[i] == null)
+            // 현재 선택된 퀵슬롯이 비어있으면 해당 퀵슬롯에 아이템 획득
+            if (inventory[currentQuickSlotIndex] == null)
             {
-                RPC_GetItem(i, item.GetComponent<NetworkObject>());
+                RPC_GetItem(currentQuickSlotIndex, item.GetComponent<NetworkObject>());
                 return;
             }
-        }
 
-        // 인벤토리 꽉참 메시지 (RpcTargets.InputAuthority)
+            // 인벤토리에 아이템 획득
+            for (byte i = 0; i < inventory.Count; i++)
+            {
+                if (inventory[i] == null)
+                {
+                    RPC_GetItem(i, item.GetComponent<NetworkObject>());
+                    return;
+                }
+            }
+        }
     }
 
     // 아이템 슬롯 바꾸기
@@ -216,11 +279,6 @@ public class Player : NetworkBehaviour
     // 버릴 아이템 대기열
     private void CheckDropItem()
     {
-        if (!Runner.IsForward)
-        {
-            return;
-        }
-
         while (DropItemIndexQueue.Count > 0)
         {
             RPC_DropItem(DropItemIndexQueue.Dequeue());
@@ -277,7 +335,9 @@ public class Player : NetworkBehaviour
             }
         }
         else
+        {
             inventory[index] = null;
+        }
     }
 
     // 부모 변경 후, 1프레임 대기하고 위치 변경
@@ -341,11 +401,6 @@ public class Player : NetworkBehaviour
         if (Runner.LocalPlayer == playerRef) { UIManager.Singleton._MenuConnection.LeaveSession(); }
     }
 
-    public void SetBlockMovement(bool blocked)
-    {
-        BlockMovement = blocked;
-    }
-
     public void Teleport(Vector3 position, Quaternion rotation, bool preservePitch = false, bool preserveYaw = false)
     {
         if (Runner.IsForward)
@@ -353,24 +408,6 @@ public class Player : NetworkBehaviour
             Kcc.SetPosition(position);
             Kcc.SetLookRotation(rotation, preservePitch, preserveYaw);
         }
-    }
-
-    public void OpenProjector()
-    {
-        if (HasInputAuthority && UIManager.Singleton.UIStack == 0)
-        {
-            UIManager.Singleton.OpenProjector(true);
-        }
-        else
-        {
-            RPC_OpenProjector();
-        }
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
-    private void RPC_OpenProjector()
-    {
-        OpenProjector();
     }
 
     public void SelectVideo(byte index)
@@ -389,5 +426,10 @@ public class Player : NetworkBehaviour
     private void RPC_SelectVideo(byte index)
     {
         SelectVideo(index);
+    }
+
+    public void Hide()
+    {
+        Kcc.Collider.enabled = !IsHideCollider;
     }
 }

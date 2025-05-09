@@ -5,6 +5,8 @@
 
 [Sfx]
 "Thunder_close.wav" by hantorio of Freesound.org
+"Menu Selection Click" by NenadSimic of Freesound.org
+"Click.wav" by kwahmah_02 of Freesound.org
 
 
 

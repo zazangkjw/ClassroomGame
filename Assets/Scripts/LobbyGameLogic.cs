@@ -161,6 +161,7 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
         yield return oneSeconds;
         thunderSfx.Play();
+        thunderRoutine = null;
     }
 
     private void UpdateProjectorText()
