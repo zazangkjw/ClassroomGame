@@ -16,14 +16,17 @@ public class Player : NetworkBehaviour
     [SerializeField] private float lookSensitivity = 0.15f;
     [SerializeField] private Vector3 jumpImpulse = new(0f, 10f, 0f);
     [SerializeField] private float interactionRange = 5f;
-    [SerializeField] private List<Item> inventory = new();
     [SerializeField] private byte inventorySize = 12;
-    [SerializeField] private Transform hand;
 
     public KCC Kcc;
     public Transform CamTarget;
+    public Transform Hand;
+    public List<Item> Inventory = new();
+    public byte CurrentQuickSlotIndex;
+    public Queue<(byte, byte)> SwitchItemIndexQueue = new();
     public Queue<byte> DropItemIndexQueue = new();
     public bool IsReady;
+    public bool EquipItemFlag;
 
     [Networked] public string Name { get; private set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
@@ -33,8 +36,6 @@ public class Player : NetworkBehaviour
 
     private InputManager inputManager;
     private Vector2 baseLookRotation;
-    private byte currentQuickSlotIndex;
-    private bool equipItemFlag;
     private Transform itemCategory;
 
     public override void Spawned()
@@ -46,7 +47,7 @@ public class Player : NetworkBehaviour
 
         if (HasInputAuthority || HasStateAuthority)
         {
-            inventory = Enumerable.Repeat<Item>(null, inventorySize).ToList();
+            Inventory = Enumerable.Repeat<Item>(null, inventorySize).ToList();
         }
 
         if (HasInputAuthority)
@@ -65,9 +66,9 @@ public class Player : NetworkBehaviour
 
             for (byte i = 0; i < inventorySize; i++)
             {
-                if (inventory[i] != null)
+                if (Inventory[i] != null)
                 {
-                    UIManager.Singleton.UpdateItemSlot(i, inventory[i].itemImage);
+                    UIManager.Singleton.UpdateItemSlot(i, Inventory[i].ItemImage);
                 }
                 else
                 {
@@ -121,6 +122,7 @@ public class Player : NetworkBehaviour
 
         if (HasInputAuthority && Runner.IsForward)
         {
+            CheckSwitchItem();
             CheckDropItem();
         }
     }
@@ -188,7 +190,7 @@ public class Player : NetworkBehaviour
             // 아이템 줍기
             if (hitInfo.collider.TryGetComponent(out Item item))
             {
-                GetItem(item);
+                item.InteractServer(this);
             }
             // 상호작용 오브젝트
             else if (hitInfo.collider.TryGetComponent(out Interactable interactable))
@@ -212,12 +214,7 @@ public class Player : NetworkBehaviour
             // 아이템
             if (hitInfo.collider.TryGetComponent(out Item item))
             {
-                UIManager.Singleton.MouseText.text = item.itemName;
-
-                if (Input.GetKeyDown(KeyCode.E))
-                {
-                    // 인벤토리 꽉참 메시지
-                }
+                UIManager.Singleton.MouseText.text = item.ItemName;
             }
             // 상호작용 오브젝트
             else if (hitInfo.collider.TryGetComponent(out Interactable interactable))
@@ -240,34 +237,33 @@ public class Player : NetworkBehaviour
         }
     }
 
-    // 아이템 획득
-    private void GetItem(Item item)
-    {
-        if (HasStateAuthority)
-        {
-            // 현재 선택된 퀵슬롯이 비어있으면 해당 퀵슬롯에 아이템 획득
-            if (inventory[currentQuickSlotIndex] == null)
-            {
-                RPC_GetItem(currentQuickSlotIndex, item.GetComponent<NetworkObject>());
-                return;
-            }
-
-            // 인벤토리에 아이템 획득
-            for (byte i = 0; i < inventory.Count; i++)
-            {
-                if (inventory[i] == null)
-                {
-                    RPC_GetItem(i, item.GetComponent<NetworkObject>());
-                    return;
-                }
-            }
-        }
-    }
-
     // 아이템 슬롯 바꾸기
     public void SwitchItem(byte index1, byte index2)
     {
-        RPC_SwitchSlot(index1, index2);
+        SwitchItemIndexQueue.Enqueue((index1, index2));
+    }
+
+    // 바꿀 아이템 대기열
+    private void CheckSwitchItem()
+    {
+        while (SwitchItemIndexQueue.Count > 0)
+        {
+            var (index1, index2) = SwitchItemIndexQueue.Dequeue();
+
+            if (HasStateAuthority)
+            {
+                (Inventory[index1], Inventory[index2]) = (Inventory[index2], Inventory[index1]);
+                if((index1 == CurrentQuickSlotIndex || index2 == CurrentQuickSlotIndex))
+                {
+                    EquipItemFlag = true;
+                }
+            }
+            else
+            {
+                (Inventory[index1], Inventory[index2]) = (Inventory[index2], Inventory[index1]);
+                RPC_SwitchSlot(index1, index2);
+            }
+        }
     }
 
     // 아이템 버리기
@@ -281,67 +277,71 @@ public class Player : NetworkBehaviour
     {
         while (DropItemIndexQueue.Count > 0)
         {
-            RPC_DropItem(DropItemIndexQueue.Dequeue());
+            byte index = DropItemIndexQueue.Dequeue();
+
+            if (HasStateAuthority)
+            {
+                Inventory[index].IsHideVisual = false;
+                Inventory[index].IsHideCollider = false;
+                Inventory[index].Hide();
+                StartCoroutine(AttachOnParent(Inventory[index], itemCategory, Hand));
+                Inventory[index] = null;
+                if (index == CurrentQuickSlotIndex)
+                {
+                    EquipItemFlag = true;
+                }
+            }
+            else
+            {
+                Inventory[index] = null;
+                RPC_DropItem(index);
+            }   
         }
     }
 
     // 아이템 획득 RPC
-    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority | RpcTargets.StateAuthority)]
-    private void RPC_GetItem(byte index, NetworkObject item)
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    public void RPC_PickUpItem(byte index, NetworkObject item)
     {
-        inventory[index] = item.GetComponent<Item>();
+        Inventory[index] = item.GetComponent<Item>();
+        Inventory[index].InteractLocal(this, index);
+    }
 
-        if (HasStateAuthority)
-        {
-            inventory[index].IsHideVisual = true;
-            inventory[index].IsHideCollider = true;
-            inventory[index].Hide(); // 호스트는 틱 단계에서 아이템을 즉시 숨김 
-            StartCoroutine(AttachOnParent(inventory[index], hand, hand));
-            if (index == currentQuickSlotIndex)
-                equipItemFlag = true;
-        }
-
-        if (HasInputAuthority)
-        {
-            UIManager.Singleton.UpdateItemSlot(index, inventory[index].itemImage);
-        }
+    // 인벤토리 풀 RPC
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    public void RPC_InventoryFull()
+    {
+        // "인벤토리가 가득 찼습니다."
     }
 
     // 아이템 슬롯 바꾸기 RPC
-    [Rpc(RpcSources.InputAuthority | RpcSources.StateAuthority, RpcTargets.InputAuthority | RpcTargets.StateAuthority)]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_SwitchSlot(byte index1, byte index2)
     {
-        (inventory[index1], inventory[index2]) = (inventory[index2], inventory[index1]);
-        if (HasStateAuthority && (index1 == currentQuickSlotIndex || index2 == currentQuickSlotIndex))
+        (Inventory[index1], Inventory[index2]) = (Inventory[index2], Inventory[index1]);
+        if (index1 == CurrentQuickSlotIndex || index2 == CurrentQuickSlotIndex)
         {
-            equipItemFlag = true;
+            EquipItemFlag = true;
         }
     }
 
     // 아이템 버리기 RPC
-    [Rpc(RpcSources.InputAuthority | RpcSources.StateAuthority, RpcTargets.InputAuthority | RpcTargets.StateAuthority)]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_DropItem(byte index)
     {
-        if (HasStateAuthority)
+        Inventory[index].IsHideVisual = false;
+        Inventory[index].IsHideCollider = false;
+        Inventory[index].Hide();
+        StartCoroutine(AttachOnParent(Inventory[index], itemCategory, Hand));
+        Inventory[index] = null;
+        if (index == CurrentQuickSlotIndex)
         {
-            inventory[index].IsHideVisual = false;
-            inventory[index].IsHideCollider = false;
-            inventory[index].Hide();
-            StartCoroutine(AttachOnParent(inventory[index], itemCategory, hand));
-            inventory[index] = null;
-            if (index == currentQuickSlotIndex)
-            {
-                equipItemFlag = true;
-            }
-        }
-        else
-        {
-            inventory[index] = null;
+            EquipItemFlag = true;
         }
     }
 
     // 부모 변경 후, 1프레임 대기하고 위치 변경
-    private IEnumerator AttachOnParent(Item item, Transform parent, Transform point)
+    public IEnumerator AttachOnParent(Item item, Transform parent, Transform point)
     {
         item.transform.SetParent(parent); // Network Transform 컴포넌트의 Sync Parent 체크
         yield return null;
@@ -351,21 +351,19 @@ public class Player : NetworkBehaviour
     // equipItemFlag가 true면 퀵슬롯 아이템 표시
     private void CheckCurrentQuickSlot(NetInput input)
     {
-        if (!HasStateAuthority)
+        if (HasStateAuthority)
         {
-            return;
-        }
+            if (CurrentQuickSlotIndex != input.CurrentQuickSlotIndex)
+            {
+                CurrentQuickSlotIndex = input.CurrentQuickSlotIndex;
+                EquipItemFlag = true;
+            }
 
-        if (input.CurrentQuickSlotIndex != currentQuickSlotIndex)
-        {
-            currentQuickSlotIndex = input.CurrentQuickSlotIndex;
-            equipItemFlag = true;
-        }
-
-        if (equipItemFlag)
-        {
-            EquipItem(currentQuickSlotIndex);
-            equipItemFlag = false;
+            if (EquipItemFlag)
+            {
+                EquipItem(CurrentQuickSlotIndex);
+                EquipItemFlag = false;
+            }
         }
     }
 
@@ -374,17 +372,17 @@ public class Player : NetworkBehaviour
     {
         for (byte i = 0; i < inventorySize; i++)
         {
-            if (inventory[i] != null)
+            if (Inventory[i] != null)
             {
-                inventory[i].IsHideVisual = true;
-                inventory[i].Hide();
+                Inventory[i].IsHideVisual = true;
+                Inventory[i].Hide();
             }
         }
 
-        if (inventory[index] != null)
+        if (Inventory[index] != null)
         {
-            inventory[index].IsHideVisual = false;
-            inventory[index].Hide();
+            Inventory[index].IsHideVisual = false;
+            Inventory[index].Hide();
         }
     }
 
@@ -410,22 +408,10 @@ public class Player : NetworkBehaviour
         }
     }
 
-    public void SelectVideo(byte index)
-    {
-        if (HasStateAuthority)
-        {
-            GameStateManager.Singleton.SelectedVideoIndex = index;
-        }
-        else if (HasInputAuthority)
-        {
-            RPC_SelectVideo(index);
-        }
-    }
-
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    private void RPC_SelectVideo(byte index)
+    public void RPC_SelectVideo(byte index)
     {
-        SelectVideo(index);
+        GameStateManager.Singleton.SelectedVideoIndex = index;
     }
 
     public void Hide()

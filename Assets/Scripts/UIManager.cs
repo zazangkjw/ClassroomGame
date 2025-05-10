@@ -147,7 +147,7 @@ public class UIManager : MonoBehaviour
         {
             if (chatInputField.gameObject.activeSelf)
             {
-                if (!chatInputField.text.IsNullOrEmpty())
+                if (!chatInputField.text.IsNullOrEmpty() && LocalPlayer.Runner.IsForward)
                 {
                     LocalPlayer.RPC_PlayerSendMessage(chatInputField.text);
                 }
@@ -451,7 +451,7 @@ public class UIManager : MonoBehaviour
 
     public void KickPlayer()
     {
-        if (LocalPlayer != null)
+        if (LocalPlayer != null && LocalPlayer.Runner.IsForward)
         {
             LocalPlayer.RPC_KickPlayer(leaderboardItems[selectedKickIndex].playerRef);
             OpenKickPopUp(false);
@@ -460,7 +460,17 @@ public class UIManager : MonoBehaviour
 
     public void SelectVideo(int index)
     {
-        LocalPlayer.SelectVideo(((byte)index));
+        if (LocalPlayer != null && LocalPlayer.Runner.IsForward)
+        {
+            if (LocalPlayer.HasStateAuthority)
+            {
+                GameStateManager.Singleton.SelectedVideoIndex = (byte)index;
+            }
+            else
+            {
+                LocalPlayer.RPC_SelectVideo(((byte)index));
+            }
+        }
     }
 
     public void PlayPointerEnterSound()

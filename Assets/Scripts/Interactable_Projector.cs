@@ -9,7 +9,7 @@ public class Interactable_Projector : Interactable
 
     public override void InteractLocal(Player player)
     {
-        if (player.HasInputAuthority)
+        if (player.HasInputAuthority && !player.IsReady)
         {
             UIManager.Singleton.PlayOnClickSound();
             UIManager.Singleton.OpenProjector(true);

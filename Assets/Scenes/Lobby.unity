@@ -7401,7 +7401,7 @@ MonoBehaviour:
   - {fileID: 1963261677}
   colliders:
   - {fileID: 775865350}
-  itemImage: {fileID: 21300000, guid: fedc3b056b8e3f64c94c8b91c5263c5e, type: 3}
+  ItemImage: {fileID: 21300000, guid: fedc3b056b8e3f64c94c8b91c5263c5e, type: 3}
 --- !u!65 &775865350
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -12928,7 +12928,7 @@ MonoBehaviour:
   - {fileID: 1295563017}
   colliders:
   - {fileID: 1341565684}
-  itemImage: {fileID: 21300000, guid: 020c8b93b722ae841bd58a7e1ccbcf56, type: 3}
+  ItemImage: {fileID: 21300000, guid: 020c8b93b722ae841bd58a7e1ccbcf56, type: 3}
 --- !u!65 &1341565684
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -14824,7 +14824,7 @@ MonoBehaviour:
   - {fileID: 642172981}
   colliders:
   - {fileID: 1553815338}
-  itemImage: {fileID: 21300000, guid: 81f1fd70c5bf69645b0053500f12590d, type: 3}
+  ItemImage: {fileID: 21300000, guid: 81f1fd70c5bf69645b0053500f12590d, type: 3}
 --- !u!65 &1553815338
 BoxCollider:
   m_ObjectHideFlags: 0
