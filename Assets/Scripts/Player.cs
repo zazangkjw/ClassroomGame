@@ -43,15 +43,21 @@ public class Player : NetworkBehaviour
         if (HasStateAuthority)
         {
             itemCategory = GameObject.Find("Items").transform;
+
+            if (HasInputAuthority)
+            {
+                Name = UIManager.Singleton.Name;
+            }
         }
 
-        if (HasInputAuthority || HasStateAuthority)
+        if (HasStateAuthority || HasInputAuthority)
         {
-            Inventory = Enumerable.Repeat<Item>(null, inventorySize).ToList();
+            Inventory = new List<Item>(new Item[inventorySize]);
         }
 
         if (HasInputAuthority)
         {
+            // 내 캐릭터의 일부 모델 파츠 렌더링 비활성화 (카메라 가림 방지)
             foreach (MeshRenderer renderer in modelParts)
             {
                 renderer.enabled = false;
@@ -59,21 +65,18 @@ public class Player : NetworkBehaviour
             }
 
             inputManager = Runner.GetComponent<InputManager>();
-            Name = UIManager.Singleton.Name;
-            RPC_PlayerName(Name);
+
+            // 플레이어 이름 RPC 호출
+            RPC_PlayerName(UIManager.Singleton.Name);
+
+            // 카메라 설정 및 UI 연결
             CameraFollow.Singleton.SetTarget(CamTarget, this);
             UIManager.Singleton.LocalPlayer = this;
 
+            // UI 인벤토리 슬롯 초기화
             for (byte i = 0; i < inventorySize; i++)
             {
-                if (Inventory[i] != null)
-                {
-                    UIManager.Singleton.UpdateItemSlot(i, Inventory[i].ItemImage);
-                }
-                else
-                {
-                    UIManager.Singleton.UpdateItemSlot(i, null);
-                }
+                UIManager.Singleton.UpdateItemSlot(i, Inventory[i]?.ItemImage);
             }
         }
     }

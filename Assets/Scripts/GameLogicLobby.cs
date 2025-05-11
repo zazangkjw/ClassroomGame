@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 
-public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
+public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 {
     [SerializeField] private NetworkPrefabRef playerPrefab;
     [SerializeField] private Collider[] readyChairColliders;
@@ -17,13 +17,13 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [SerializeField] private TextMeshProUGUI projectorText;
 
     [Networked, Capacity(10)] private NetworkDictionary<PlayerRef, Player> Players => default;
-    [Networked, OnChangedRender(nameof(Thunder))] private byte ThunderSync {  get; set; }
+    [Networked, OnChangedRender(nameof(Thunder))] private bool ThunderSync { get; set; }
+    [Networked, OnChangedRender(nameof(CountDown))] private bool IsCountdown { get; set; }
 
     private Coroutine thunderRoutine;
     private WaitForSeconds oneSeconds = new WaitForSeconds(1);
     private WaitForSeconds thunderDelay1 = new WaitForSeconds(5f);
     private WaitForSeconds thunderDelay2 = new WaitForSeconds(0.1f);
-    private bool isCountdown;
 
     public override void Spawned()
     {
@@ -38,18 +38,20 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
     public override void FixedUpdateNetwork()
     {
-        if (Players.Count < 1)
-            return;
-
-        if (!Runner.IsResimulation && UIManager.Singleton.LeaderboardScreen.activeSelf)
-            UIManager.Singleton.UpdateLeaderboard(Players.ToArray());
-
-        if (HasStateAuthority && Runner.IsForward)
+        if (Players.Count >= 1)
         {
-            CheckReady();
-        }
+            if (Runner.IsForward && UIManager.Singleton.LeaderboardScreen.activeSelf)
+            {
+                UIManager.Singleton.UpdateLeaderboard(Players.ToArray());
+            }
 
-        UpdateProjectorText();
+            if (HasStateAuthority && Runner.IsForward)
+            {
+                CheckReady();
+            }
+
+            UpdateProjectorText();
+        }
     }
 
     public void PlayerJoined(PlayerRef player)
@@ -63,13 +65,13 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
     public void PlayerLeft(PlayerRef player)
     {
-        if (!HasStateAuthority)
-            return;
-
-        if (Players.TryGet(player, out Player playerBehaviour))
+        if (HasStateAuthority)
         {
-            Players.Remove(player);
-            Runner.Despawn(playerBehaviour.Object);
+            if (Players.TryGet(player, out Player playerBehaviour))
+            {
+                Players.Remove(player);
+                Runner.Despawn(playerBehaviour.Object);
+            }
         }
     }
 
@@ -79,37 +81,37 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         {
             if (!player.Value.IsReady)
             {
-                if(isCountdown)
+                if (IsCountdown)
                 {
-                    isCountdown = false;
-                    RPC_EndCountDown();
+                    IsCountdown = false;
+                    CountDown();
                 }
 
                 return;
             }
         }
-
-        if (!isCountdown)
+        
+        if (!IsCountdown)
         {
-            isCountdown = true;
-            RPC_StartCountDown();
+            IsCountdown = true;
+            CountDown();
         }
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.StateAuthority | RpcTargets.Proxies)]
-    private void RPC_StartCountDown()
+    private void CountDown()
     {
-        projectorText.gameObject.SetActive(false);
-        countdownVideo.gameObject.SetActive(true);
-        countdownVideo.Play();
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.StateAuthority | RpcTargets.Proxies)]
-    private void RPC_EndCountDown()
-    {
-        projectorText.gameObject.SetActive(true);
-        countdownVideo.gameObject.SetActive(false);
-        countdownVideo.Stop();
+        if (IsCountdown)
+        {
+            projectorText.gameObject.SetActive(false);
+            countdownVideo.gameObject.SetActive(true);
+            countdownVideo.Play();
+        }
+        else
+        {
+            projectorText.gameObject.SetActive(true);
+            countdownVideo.gameObject.SetActive(false);
+            countdownVideo.Stop();
+        }
     }
 
     private void OnCountdownEnd(VideoPlayer vp)
@@ -132,8 +134,8 @@ public class LobbyGameLogic : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         while (true)
         {
             yield return thunderDelay1;
+            ThunderSync = !ThunderSync;
             Thunder();
-            ThunderSync = (byte)((ThunderSync + 1) % 2);
         }
     }
 
