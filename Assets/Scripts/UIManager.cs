@@ -48,6 +48,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip pointerEnterSound;
     [SerializeField] private AudioClip onClickSound;
+    [SerializeField] private GameObject kickedPopUp;
 
     private PointerEventData pointerData;
     private List<RaycastResult> uiRaycasterResults = new();
@@ -288,6 +289,21 @@ public class UIManager : MonoBehaviour
             UIStack--;
             projectorScreen.SetActive(false);
             EventSystem.current.SetSelectedGameObject(null);
+        }
+    }
+
+    public void OpenKickedPopup(bool open)
+    {
+        if (open && !kickedPopUp.activeSelf)
+        {
+            UIStack++;
+            kickedPopUp.SetActive(true);
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+        else if (!open && kickedPopUp.activeSelf)
+        {
+            UIStack--;
+            kickedPopUp.SetActive(false);
         }
     }
 

@@ -399,7 +399,10 @@ public class Player : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
     public void RPC_KickPlayer(PlayerRef playerRef)
     {
-        if (Runner.LocalPlayer == playerRef) { UIManager.Singleton._MenuConnection.LeaveSession(); }
+        if (Runner.LocalPlayer == playerRef)
+        {
+            UIManager.Singleton._MenuConnection.KickedFromSession();
+        }
     }
 
     public void Teleport(Vector3 position, Quaternion rotation, bool preservePitch = false, bool preserveYaw = false)

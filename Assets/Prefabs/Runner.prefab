@@ -72,3 +72,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7adfa6cee9982d478dd353400d33f5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentQuickSlotIndex: 0
+  menuConnection: {fileID: 0}

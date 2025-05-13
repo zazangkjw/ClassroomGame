@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class RoomInfo : MonoBehaviour
 {
+    public string FusionSession;
     public string RoomName { get { return roomName.text; } set { roomName.text = value; } }
     public int PlayerCount;
     public int MaxPlayers;
@@ -14,12 +15,13 @@ public class RoomInfo : MonoBehaviour
 
     public void SelectSession()
     {
-        transform.parent.GetComponent<RoomList>().menuConnection.SelectRoom(RoomName);
+        UIManager.Singleton._MenuConnection.SelectRoom(RoomName);
     }
 
-    public void SetRoomInfo(string sessionName, int playerCount, int maxPlayers)
+    public void SetRoomInfo(string fusionSession, string roomName, int playerCount, int maxPlayers)
     {
-        RoomName = sessionName;
+        FusionSession = fusionSession;
+        RoomName = roomName;
         PlayerCount = playerCount;
         MaxPlayers = maxPlayers;
         currentPlayers.text = $"{PlayerCount}/{MaxPlayers}";

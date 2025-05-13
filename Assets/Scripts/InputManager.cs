@@ -81,7 +81,11 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
 
     public void OnConnectedToServer(NetworkRunner runner) { }
 
-    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
+    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
+    {
+        Debug.Log($"Connection failed: {reason}");
+        menuConnection.LeaveSession();
+    }
 
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
 
@@ -89,7 +93,7 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
-        Debug.Log($"¼­¹ö ¿¬°á ²÷±è: {reason}");
+        Debug.Log($"Disconnected From Server: {reason}");
         menuConnection.LeaveSession();
     }
 
@@ -131,6 +135,7 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
 
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) 
     {
+        // Photon ¹öÀü
         menuConnection.SessionList = sessionList;
 
         if (menuConnection.DoRefresh)
