@@ -125,7 +125,8 @@ public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         if (HasStateAuthority)
         {
             Debug.Log(GameStateManager.Singleton.SelectedVideoIndex);
-            //SceneManager.LoadScene(UIManager.Singleton.VideoListOriginal[GameStateManager.Singleton.SelectedVideoIndex]);
+            //UIManager.Singleton._MenuConnection.CurrentLobby.SetPrivate();
+            //Runner.LoadScene(UIManager.Singleton.VideoListOriginal[GameStateManager.Singleton.SelectedVideoIndex]);
         }
     }
 

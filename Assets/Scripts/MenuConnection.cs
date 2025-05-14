@@ -1,5 +1,6 @@
 #region Photon 버전
 using Fusion;
+using Steamworks;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -197,7 +198,8 @@ public class MenuConnection : MonoBehaviour
 {
     public string TestSceneName;
     public string SessionName;
-    public Lobby[] LobbyList; // steamworks 버전
+    public Lobby[] LobbyList;
+    public Lobby CurrentLobby;
 
     [SerializeField] private NetworkRunner runnerPrefab;
     [SerializeField] private GameObject roomPrefab;
@@ -217,17 +219,12 @@ public class MenuConnection : MonoBehaviour
     {
         try
         {
-            Steamworks.SteamClient.Init(252490, true);
+            Steamworks.SteamClient.Init(480, true);
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Steam Init Failed: {e.Message}");
         }
-    }
-
-    private void Update()
-    {
-        Steamworks.SteamClient.RunCallbacks();
     }
 
     private void OnEnable()
@@ -243,7 +240,8 @@ public class MenuConnection : MonoBehaviour
 
     public void SteamMatchMaking_OnLobbyEnter(Lobby lobby)
     {
-        StartClient(lobby);
+        CurrentLobby = lobby;
+        StartClient();
     }
 
     public void JoinLobby()
@@ -280,10 +278,10 @@ public class MenuConnection : MonoBehaviour
         {
             RoomInfo room;
 
-            foreach (var session in LobbyList)
+            foreach (var lobby in LobbyList)
             {
                 room = Instantiate(roomPrefab, roomListContent).GetComponent<RoomInfo>();
-                room.SetRoomInfo(session.GetData("fusion_session"), session.GetData("name"), session.MemberCount, session.MaxMembers);
+                room.SetRoomInfo(lobby.GetData("fusion_session"), lobby.GetData("name"), lobby.MemberCount, lobby.MaxMembers);
             }
         }
     }
@@ -338,10 +336,15 @@ public class MenuConnection : MonoBehaviour
 
         hostFailMessage.text = $"Wait...";
 
-        var createLobby = await SteamMatchmaking.CreateLobbyAsync(maxPlayers);
         string fusionSession = Guid.NewGuid().ToString(); // 고유 식별자 생성
-        createLobby.Value.SetData("fusion_session", fusionSession);
-        createLobby.Value.SetData("name", SessionName); // UI 표시용
+        var createLobby = await SteamMatchmaking.CreateLobbyAsync(maxPlayers);
+        CurrentLobby = createLobby.Value;
+        CurrentLobby.SetData("fusion_session", fusionSession);
+        CurrentLobby.SetData("name", SessionName); // UI 표시용
+        if (true) // 공개 체크되어 있으면 실행
+        {
+            CurrentLobby.SetPublic();
+        }
 
         var sceneInfo = new NetworkSceneInfo();
         sceneInfo.AddSceneRef(SceneRef.FromIndex(1), LoadSceneMode.Single);
@@ -355,12 +358,22 @@ public class MenuConnection : MonoBehaviour
             Scene = sceneInfo
         });
 
+        var init = new SteamServerInit("default", "Club404 Multiplayer Server")
+        {
+            GamePort = 27015,
+            QueryPort = 27016,
+            Secure = true,
+            VersionString = "1.0.0"
+        };
+
+        SteamServer.Init(480, init, true);
+
         //await runner.LoadScene("Lobby");
         onSessionConnected.Invoke();
         UIManager.Singleton.UIStack = 0;
     }
 
-    public async void StartClient(Lobby lobby)
+    public async void StartClient()
     {
         if (runner == null)
         {
@@ -375,7 +388,7 @@ public class MenuConnection : MonoBehaviour
         await runner.StartGame(new StartGameArgs()
         {
             GameMode = GameMode.Client,
-            SessionName = lobby.GetData("fusion_session"),
+            SessionName = CurrentLobby.GetData("fusion_session"),
             SceneManager = runner.GetComponent<NetworkSceneManagerDefault>(),
         });
 
@@ -385,6 +398,7 @@ public class MenuConnection : MonoBehaviour
 
     public async void LeaveSession()
     {
+        CurrentLobby.Leave();
         await runner.Shutdown();
         SceneManager.LoadScene("Main");
         onSessionDisconnected.Invoke();
@@ -397,12 +411,16 @@ public class MenuConnection : MonoBehaviour
 
     public async void KickedFromSession()
     {
+        CurrentLobby.Leave();
         await runner.Shutdown();
         SceneManager.LoadScene("Main");
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
         UIManager.Singleton.OpenKickedPopup(true);
-        Destroy(GameStateManager.Singleton);
+        if (GameStateManager.Singleton != null)
+        {
+            Destroy(GameStateManager.Singleton);
+        }
     }
 }
 #endregion*/

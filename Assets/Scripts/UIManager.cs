@@ -467,9 +467,9 @@ public class UIManager : MonoBehaviour
 
     public void KickPlayer()
     {
-        if (LocalPlayer != null && LocalPlayer.Runner.IsForward)
+        if (LocalPlayer != null)
         {
-            LocalPlayer.RPC_KickPlayer(leaderboardItems[selectedKickIndex].playerRef);
+            LocalPlayer.KickPlayerQueue.Enqueue(leaderboardItems[selectedKickIndex].playerRef);
             OpenKickPopUp(false);
         }
     }

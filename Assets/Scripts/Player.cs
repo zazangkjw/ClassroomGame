@@ -25,6 +25,7 @@ public class Player : NetworkBehaviour
     public byte CurrentQuickSlotIndex;
     public Queue<(byte, byte)> SwitchItemIndexQueue = new();
     public Queue<byte> DropItemIndexQueue = new();
+    public Queue<PlayerRef> KickPlayerQueue = new();
     public bool IsReady;
     public bool EquipItemFlag;
 
@@ -127,6 +128,11 @@ public class Player : NetworkBehaviour
         {
             CheckSwitchItem();
             CheckDropItem();
+        }
+
+        if (HasStateAuthority && HasInputAuthority && Runner.IsForward)
+        {
+            CheckKickPlayer();
         }
     }
 
@@ -395,6 +401,13 @@ public class Player : NetworkBehaviour
         UIManager.Singleton.UpdateChat($"{Name}: {message}");
     }
 
+    private void CheckKickPlayer()
+    {
+        while (KickPlayerQueue.Count > 0)
+        {
+            RPC_KickPlayer(KickPlayerQueue.Dequeue());
+        }
+    }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
     public void RPC_KickPlayer(PlayerRef playerRef)
