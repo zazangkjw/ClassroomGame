@@ -48,7 +48,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip pointerEnterSound;
     [SerializeField] private AudioClip onClickSound;
+    [SerializeField] private GameObject blocking;
     [SerializeField] private GameObject kickedPopUp;
+    [SerializeField] private GameObject steamPopUp;
 
     private PointerEventData pointerData;
     private List<RaycastResult> uiRaycasterResults = new();
@@ -292,18 +294,43 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    public void OpenBlocking(bool open)
+    {
+        if (open && !blocking.activeSelf)
+        {
+            blocking.SetActive(true);
+        }
+        else if (!open && blocking.activeSelf)
+        {
+            blocking.SetActive(false);
+        }
+    }
+
     public void OpenKickedPopup(bool open)
     {
         if (open && !kickedPopUp.activeSelf)
         {
             UIStack++;
             kickedPopUp.SetActive(true);
-            EventSystem.current.SetSelectedGameObject(null);
         }
         else if (!open && kickedPopUp.activeSelf)
         {
             UIStack--;
             kickedPopUp.SetActive(false);
+        }
+    }
+
+    public void OpenSteamPopup(bool open)
+    {
+        if (open && !steamPopUp.activeSelf)
+        {
+            UIStack++;
+            steamPopUp.SetActive(true);
+        }
+        else if (!open && steamPopUp.activeSelf)
+        {
+            UIStack--;
+            steamPopUp.SetActive(false);
         }
     }
 

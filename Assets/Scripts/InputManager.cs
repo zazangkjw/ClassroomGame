@@ -135,14 +135,14 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
 
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) 
     {
-        // Photon 버전
+/*        // Photon 버전
         menuConnection.SessionList = sessionList;
 
         if (menuConnection.DoRefresh)
         {
             menuConnection.DoRefresh = false;
             menuConnection.RefreshLobby();
-        }
+        }*/
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)

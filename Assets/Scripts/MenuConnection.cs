@@ -1,6 +1,5 @@
-#region Photon 버전
+/*#region Photon 버전
 using Fusion;
-using Steamworks;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -178,11 +177,12 @@ public class MenuConnection : MonoBehaviour
         Destroy(GameStateManager.Singleton);
     }
 }
-#endregion
+#endregion*/
 
 
 
-/*#region steamworks 버전
+
+#region steamworks 버전
 using Fusion;
 using Steamworks;
 using Steamworks.Data;
@@ -214,22 +214,13 @@ public class MenuConnection : MonoBehaviour
 
     private NetworkRunner runner;
     private int maxPlayers = 5;
+    private bool isHost;
 
-    private void Awake()
+    private void Start()
     {
-        try
-        {
-            Steamworks.SteamClient.Init(480, true);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Steam Init Failed: {e.Message}");
-        }
-    }
-
-    private void OnEnable()
-    {
+        TrySteamClientInit();
         SteamMatchmaking.OnLobbyEntered += SteamMatchMaking_OnLobbyEnter;
+        Debug.Log("이벤트 추가");
     }
 
     private void OnApplicationQuit()
@@ -238,20 +229,46 @@ public class MenuConnection : MonoBehaviour
         Steamworks.SteamClient.Shutdown();
     }
 
+    public void TrySteamClientInit()
+    {
+        try
+        {
+            Steamworks.SteamClient.Init(480, true);
+        }
+        catch (System.Exception e)
+        {
+            UIManager.Singleton.OpenBlocking(true);
+            UIManager.Singleton.OpenSteamPopup(true);
+            Debug.Log($"Steam Init Failed: {e.Message}");
+            return;
+        }
+
+        UIManager.Singleton.OpenBlocking(false);
+    }
+
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
+
     public void SteamMatchMaking_OnLobbyEnter(Lobby lobby)
     {
-        CurrentLobby = lobby;
-        StartClient();
+        if (lobby.GetData("alive") == "true")
+        {
+            CurrentLobby = lobby;
+            if (!isHost)
+            {
+                StartClient();
+            }
+        }
+        else
+        {
+            lobby.Leave();
+        }
     }
 
     public void JoinLobby()
     {
-        if (runner == null)
-        {
-            runner = Instantiate(runnerPrefab);
-            runner.GetComponent<InputManager>().menuConnection = this;
-        }
-
         hostFailMessage.text = "";
         joinFailMessage.text = "";
         onJoinLobby.Invoke();
@@ -304,7 +321,7 @@ public class MenuConnection : MonoBehaviour
 
         foreach (var lobby in LobbyList)
         {
-            if (lobby.GetData("name") == SessionName)
+            if (lobby.GetData("name") == SessionName && lobby.GetData("alive") == "true")
             {
                 await SteamMatchmaking.JoinLobbyAsync(lobby.Id);
                 return;
@@ -334,13 +351,21 @@ public class MenuConnection : MonoBehaviour
             }
         }
 
+        if (runner == null)
+        {
+            runner = Instantiate(runnerPrefab);
+            runner.GetComponent<InputManager>().menuConnection = this;
+        }
+
         hostFailMessage.text = $"Wait...";
+        isHost = true;
 
         string fusionSession = Guid.NewGuid().ToString(); // 고유 식별자 생성
         var createLobby = await SteamMatchmaking.CreateLobbyAsync(maxPlayers);
         CurrentLobby = createLobby.Value;
         CurrentLobby.SetData("fusion_session", fusionSession);
         CurrentLobby.SetData("name", SessionName); // UI 표시용
+        CurrentLobby.SetData("alive", "true");
         if (true) // 공개 체크되어 있으면 실행
         {
             CurrentLobby.SetPublic();
@@ -398,8 +423,19 @@ public class MenuConnection : MonoBehaviour
 
     public async void LeaveSession()
     {
-        CurrentLobby.Leave();
+        if (CurrentLobby.Owner.Id != SteamClient.SteamId)
+        {
+            CurrentLobby.Leave();
+        }
+        else if (isHost)
+        {
+            isHost = false;
+            CurrentLobby.SetData("alive", "false");
+            CurrentLobby.Leave();
+            SteamServer.Shutdown();
+        }
         await runner.Shutdown();
+        runner = null;
         SceneManager.LoadScene("Main");
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
@@ -411,16 +447,21 @@ public class MenuConnection : MonoBehaviour
 
     public async void KickedFromSession()
     {
-        CurrentLobby.Leave();
+        if (CurrentLobby.Owner.Id != SteamClient.SteamId)
+        {
+            CurrentLobby.Leave();
+        }
         await runner.Shutdown();
+        runner = null;
         SceneManager.LoadScene("Main");
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
         UIManager.Singleton.OpenKickedPopup(true);
+        UIManager.Singleton.OpenBlocking(true);
         if (GameStateManager.Singleton != null)
         {
             Destroy(GameStateManager.Singleton);
         }
     }
 }
-#endregion*/
+#endregion
