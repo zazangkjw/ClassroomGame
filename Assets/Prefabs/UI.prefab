@@ -9693,6 +9693,7 @@ MonoBehaviour:
   onClickSound: {fileID: 8300000, guid: 7e42be247e4dcd64a9a08983147e79a3, type: 3}
   blocking: {fileID: 8041566980346799701}
   kickedPopUp: {fileID: 1040310520582494709}
+  kickedPopUpMessage: {fileID: 1197188240810024}
   steamPopUp: {fileID: 6431119513466953547}
 --- !u!114 &1705850645671701625
 MonoBehaviour:

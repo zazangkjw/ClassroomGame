@@ -1,6 +1,7 @@
 using Fusion;
 using Fusion.Addons.KCC;
 using Fusion.Sockets;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -123,7 +124,13 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
         }
     }
 
-    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
+    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) 
+    {
+        if (runner.IsServer && player != runner.LocalPlayer)
+        {
+            Debug.Log("OnPlayerLeft");
+        }
+    }
 
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
 

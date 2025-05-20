@@ -36,6 +36,14 @@ public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         }
     }
 
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (thunderRoutine != null)
+        {
+            StopCoroutine(thunderRoutine);
+        }
+    }
+
     public override void FixedUpdateNetwork()
     {
         if (Players.Count >= 1)

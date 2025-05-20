@@ -7,6 +7,8 @@ public class GameStateManager : NetworkBehaviour
 {
     public static GameStateManager Singleton;
 
+    public List<ulong> AuthenticatedPlayers = new();
+
     [Networked] public byte SelectedVideoIndex { get; set; }
 
     public override void Spawned()

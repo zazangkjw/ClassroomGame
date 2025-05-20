@@ -50,6 +50,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private AudioClip onClickSound;
     [SerializeField] private GameObject blocking;
     [SerializeField] private GameObject kickedPopUp;
+    [SerializeField] private TextMeshProUGUI kickedPopUpMessage;
     [SerializeField] private GameObject steamPopUp;
 
     private PointerEventData pointerData;
@@ -514,6 +515,11 @@ public class UIManager : MonoBehaviour
                 LocalPlayer.RPC_SelectVideo(((byte)index));
             }
         }
+    }
+
+    public void SetKickedPopupMessage(string text)
+    {
+        kickedPopUpMessage.text = text;
     }
 
     public void PlayPointerEnterSound()

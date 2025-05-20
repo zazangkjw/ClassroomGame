@@ -200,6 +200,7 @@ public class MenuConnection : MonoBehaviour
     public string SessionName;
     public Lobby[] LobbyList;
     public Lobby CurrentLobby;
+    public AuthTicket Ticket;
 
     [SerializeField] private NetworkRunner runnerPrefab;
     [SerializeField] private GameObject roomPrefab;
@@ -226,14 +227,14 @@ public class MenuConnection : MonoBehaviour
     private void OnApplicationQuit()
     {
         SteamMatchmaking.OnLobbyEntered -= SteamMatchMaking_OnLobbyEnter;
-        Steamworks.SteamClient.Shutdown();
+        SteamClient.Shutdown();
     }
 
     public void TrySteamClientInit()
     {
         try
         {
-            Steamworks.SteamClient.Init(480, true);
+            SteamClient.Init(480, true);
         }
         catch (System.Exception e)
         {
@@ -253,17 +254,17 @@ public class MenuConnection : MonoBehaviour
 
     public void SteamMatchMaking_OnLobbyEnter(Lobby lobby)
     {
-        if (lobby.GetData("alive") == "true")
+        if (!isHost)
         {
-            CurrentLobby = lobby;
-            if (!isHost)
+            if (lobby.GetData("alive") == "true")
             {
+                CurrentLobby = lobby;
                 StartClient();
             }
-        }
-        else
-        {
-            lobby.Leave();
+            else
+            {
+                lobby.Leave();
+            }
         }
     }
 
@@ -434,6 +435,8 @@ public class MenuConnection : MonoBehaviour
             CurrentLobby.Leave();
             SteamServer.Shutdown();
         }
+        Ticket?.Cancel();
+        Ticket = null;
         await runner.Shutdown();
         runner = null;
         SceneManager.LoadScene("Main");
@@ -451,11 +454,36 @@ public class MenuConnection : MonoBehaviour
         {
             CurrentLobby.Leave();
         }
+        Ticket?.Cancel();
+        Ticket = null;
         await runner.Shutdown();
         runner = null;
         SceneManager.LoadScene("Main");
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
+        UIManager.Singleton.SetKickedPopupMessage("Kicked by host");
+        UIManager.Singleton.OpenKickedPopup(true);
+        UIManager.Singleton.OpenBlocking(true);
+        if (GameStateManager.Singleton != null)
+        {
+            Destroy(GameStateManager.Singleton);
+        }
+    }
+
+    public async void SteamAuthFail()
+    {
+        if (CurrentLobby.Owner.Id != SteamClient.SteamId)
+        {
+            CurrentLobby.Leave();
+        }
+        Ticket?.Cancel();
+        Ticket = null;
+        await runner.Shutdown();
+        runner = null;
+        SceneManager.LoadScene("Main");
+        onSessionDisconnected.Invoke();
+        UIManager.Singleton.UIStack = 0;
+        UIManager.Singleton.SetKickedPopupMessage("Steam auth failed");
         UIManager.Singleton.OpenKickedPopup(true);
         UIManager.Singleton.OpenBlocking(true);
         if (GameStateManager.Singleton != null)

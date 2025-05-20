@@ -1,10 +1,9 @@
 using Fusion;
 using Fusion.Addons.KCC;
+using Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using TMPro;
 using UnityEngine;
 
 public class Player : NetworkBehaviour
@@ -26,6 +25,7 @@ public class Player : NetworkBehaviour
     public Queue<(byte, byte)> SwitchItemIndexQueue = new();
     public Queue<byte> DropItemIndexQueue = new();
     public Queue<PlayerRef> KickPlayerQueue = new();
+    public Queue<PlayerRef> AuthFailedPlayerQueue = new();
     public bool IsReady;
     public bool EquipItemFlag;
 
@@ -41,6 +41,11 @@ public class Player : NetworkBehaviour
 
     public override void Spawned()
     {
+        if (!HasStateAuthority && HasInputAuthority)
+        {
+            GetSteamAuthTicket();
+        }
+
         if (HasStateAuthority)
         {
             itemCategory = GameObject.Find("Items").transform;
@@ -436,5 +441,49 @@ public class Player : NetworkBehaviour
     public void Hide()
     {
         Kcc.Collider.enabled = !IsHideCollider;
+    }
+
+    private async void GetSteamAuthTicket()
+    {
+        if (UIManager.Singleton._MenuConnection.Ticket == null)
+        {
+            UIManager.Singleton._MenuConnection.Ticket = await SteamUser.GetAuthSessionTicketAsync(UIManager.Singleton._MenuConnection.CurrentLobby.Owner.Id);
+            Rpc_SendSteamTicket(UIManager.Singleton._MenuConnection.Ticket.Data, SteamClient.SteamId);
+        }
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void Rpc_SendSteamTicket(byte[] steamTicket, ulong steamId)
+    {
+        if (!GameStateManager.Singleton.AuthenticatedPlayers.Contains(steamId))
+        {
+            // 서버에서 검증
+            VerifyTicket(steamTicket, steamId);
+        }
+    }
+
+    private void VerifyTicket(byte[] steamTicket, ulong steamId)
+    {
+        bool result = SteamServer.BeginAuthSession(steamTicket, steamId);
+        
+        if (result)
+        {
+            // 인증 성공
+            Debug.Log($"인증 성공: {steamId}");
+            GameStateManager.Singleton.AuthenticatedPlayers.Add(steamId);
+        }
+        else
+        {
+            // 인증 실패 → 연결 끊기
+            RPC_SteamAuthFail();
+            Debug.Log($"Steam auth failed: {steamId}");
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    private void RPC_SteamAuthFail()
+    {
+        Debug.Log("추방당함");
+        UIManager.Singleton._MenuConnection.SteamAuthFail();
     }
 }
