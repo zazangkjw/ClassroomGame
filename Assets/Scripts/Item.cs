@@ -77,7 +77,7 @@ public class Item : NetworkBehaviour
             IsHideVisual = true;
             IsHideCollider = true;
             Hide();
-            StartCoroutine(player.AttachOnParent(this, player.Hand, player.Hand));
+            StartCoroutine(player.AttachOnParent(gameObject, player.Hand, player.Hand));
             player.EquipItemFlag = true;
         }
     }

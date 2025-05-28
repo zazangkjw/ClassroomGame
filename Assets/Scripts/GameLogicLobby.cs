@@ -17,7 +17,7 @@ public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [SerializeField] private TextMeshProUGUI projectorText;
 
     [Networked, Capacity(10)] private NetworkDictionary<PlayerRef, Player> Players => default;
-    [Networked, OnChangedRender(nameof(Thunder))] private bool ThunderSync { get; set; }
+    [Networked] private TickTimer ThunderTickTimer { get; set; }
     [Networked, OnChangedRender(nameof(CountDown))] private bool IsCountdown { get; set; }
 
     private Coroutine thunderRoutine;
@@ -29,11 +29,6 @@ public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         Runner.SetIsSimulated(Object, true);
         countdownVideo.loopPointReached += OnCountdownEnd;
-
-        if (HasStateAuthority)
-        {
-            StartCoroutine(WaitThunderRoutine());
-        }
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
@@ -58,6 +53,7 @@ public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                 CheckReady();
             }
 
+            Thunder();
             UpdateProjectorText();
         }
     }
@@ -129,32 +125,32 @@ public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             col.enabled = false;
         }
 
+        UIManager.Singleton.CloseAllUI();
+
         // ¾À ÀüÈ¯
         if (HasStateAuthority)
         {
             Debug.Log(GameStateManager.Singleton.SelectedVideoIndex);
-            //UIManager.Singleton._MenuConnection.CurrentLobby.SetPrivate();
+            UIManager.Singleton._MenuConnection.CurrentLobby.SetPrivate();
             //Runner.LoadScene(UIManager.Singleton.VideoListOriginal[GameStateManager.Singleton.SelectedVideoIndex]);
-        }
-    }
-
-    private IEnumerator WaitThunderRoutine()
-    {
-        while (true)
-        {
-            yield return thunderDelay1;
-            ThunderSync = !ThunderSync;
-            Thunder();
         }
     }
 
     private void Thunder()
     {
-        if (thunderRoutine != null)
+        if (ThunderTickTimer.ExpiredOrNotRunning(Runner))
         {
-            StopCoroutine(thunderRoutine);
+            if (thunderRoutine != null)
+            {
+                StopCoroutine(thunderRoutine);
+            }
+            thunderRoutine = StartCoroutine(ThunderRoutine());
+
+            if (HasStateAuthority)
+            {
+                ThunderTickTimer = TickTimer.CreateFromSeconds(Runner, 10f);
+            }
         }
-        thunderRoutine = StartCoroutine(ThunderRoutine());
     }
 
     private IEnumerator ThunderRoutine()

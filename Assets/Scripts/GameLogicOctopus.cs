@@ -16,10 +16,14 @@ public class GameLogicOctopus : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     public override void FixedUpdateNetwork()
     {
         if (Players.Count < 1)
+        {
             return;
+        }
 
         if (!Runner.IsResimulation && UIManager.Singleton.LeaderboardScreen.activeSelf)
+        {
             UIManager.Singleton.UpdateLeaderboard(Players.ToArray());
+        }
     }
 
     public void PlayerJoined(PlayerRef player)
@@ -34,7 +38,9 @@ public class GameLogicOctopus : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     public void PlayerLeft(PlayerRef player)
     {
         if (!HasStateAuthority)
+        {
             return;
+        }
 
         if (Players.TryGet(player, out Player playerBehaviour))
         {

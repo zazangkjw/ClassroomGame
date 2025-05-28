@@ -4,7 +4,9 @@ using Steamworks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Player : NetworkBehaviour
 {
@@ -16,6 +18,8 @@ public class Player : NetworkBehaviour
     [SerializeField] private Vector3 jumpImpulse = new(0f, 10f, 0f);
     [SerializeField] private float interactionRange = 5f;
     [SerializeField] private byte inventorySize = 12;
+    [SerializeField] private GameObject myCharacter;
+    [SerializeField] private Animator myAnimator;
 
     public KCC Kcc;
     public Transform CamTarget;
@@ -26,6 +30,7 @@ public class Player : NetworkBehaviour
     public Queue<byte> DropItemIndexQueue = new();
     public Queue<PlayerRef> KickPlayerQueue = new();
     public Queue<PlayerRef> AuthFailedPlayerQueue = new();
+    public Queue<byte> CharacterQueue = new();
     public bool IsReady;
     public bool EquipItemFlag;
 
@@ -34,6 +39,7 @@ public class Player : NetworkBehaviour
     [Networked, OnChangedRender(nameof(Jumped))] private int JumpSync { get; set; }
     [Networked, OnChangedRender(nameof(Hide))] public bool IsHideCollider { get; set; }
     [Networked] public bool IsBlockMovement { get; set; }
+    [Networked, OnChangedRender(nameof(ChangeCharacter))] private byte CharacterIndex { get; set; }
 
     private InputManager inputManager;
     private Vector2 baseLookRotation;
@@ -63,13 +69,6 @@ public class Player : NetworkBehaviour
 
         if (HasInputAuthority)
         {
-            // 내 캐릭터의 일부 모델 파츠 렌더링 비활성화 (카메라 가림 방지)
-            foreach (MeshRenderer renderer in modelParts)
-            {
-                renderer.enabled = false;
-                //renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-            }
-
             inputManager = Runner.GetComponent<InputManager>();
 
             // 플레이어 이름 RPC 호출
@@ -83,6 +82,43 @@ public class Player : NetworkBehaviour
             for (byte i = 0; i < inventorySize; i++)
             {
                 UIManager.Singleton.UpdateItemSlot(i, Inventory[i]?.ItemImage);
+            }
+
+            // 캐릭터 외형 변경
+            if (CharacterIndex != UIManager.Singleton.CharacterIndex)
+            {
+                if (HasStateAuthority)
+                {
+                    CharacterIndex = UIManager.Singleton.CharacterIndex;
+                    ChangeCharacter();
+                }
+                else
+                {
+                    RPC_ChangeCharacter(UIManager.Singleton.CharacterIndex);
+                }
+            }
+            else
+            {
+                // 내 캐릭터의 일부 모델 파츠 렌더링 비활성화 (카메라 가림 방지)
+                foreach (SkinnedMeshRenderer renderer in myCharacter.GetComponent<CharacterInfo>().Visuals)
+                {
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+                }
+            }
+
+            // 첫 입장 시, 캐릭터 선택창 켜기
+            if (UIManager.Singleton.IsFirstJoin && SceneManager.GetActiveScene().name == "Lobby")
+            {
+                UIManager.Singleton.OpenCharacterScreen(true);
+                UIManager.Singleton.IsFirstJoin = false;
+            }
+        }
+
+        if (!HasInputAuthority)
+        {
+            if (CharacterIndex != 0)
+            {
+                ChangeCharacter();
             }
         }
     }
@@ -131,6 +167,7 @@ public class Player : NetworkBehaviour
 
         if (HasInputAuthority && Runner.IsForward)
         {
+            CheckCharacterIndex();
             CheckSwitchItem();
             CheckDropItem();
         }
@@ -251,12 +288,6 @@ public class Player : NetworkBehaviour
         }
     }
 
-    // 아이템 슬롯 바꾸기
-    public void SwitchItem(byte index1, byte index2)
-    {
-        SwitchItemIndexQueue.Enqueue((index1, index2));
-    }
-
     // 바꿀 아이템 대기열
     private void CheckSwitchItem()
     {
@@ -280,12 +311,6 @@ public class Player : NetworkBehaviour
         }
     }
 
-    // 아이템 버리기
-    public void DropItem(byte index)
-    {
-        DropItemIndexQueue.Enqueue(index);
-    }
-
     // 버릴 아이템 대기열
     private void CheckDropItem()
     {
@@ -298,7 +323,7 @@ public class Player : NetworkBehaviour
                 Inventory[index].IsHideVisual = false;
                 Inventory[index].IsHideCollider = false;
                 Inventory[index].Hide();
-                StartCoroutine(AttachOnParent(Inventory[index], itemCategory, Hand));
+                StartCoroutine(AttachOnParent(Inventory[index].gameObject, itemCategory, Hand));
                 Inventory[index] = null;
                 if (index == CurrentQuickSlotIndex)
                 {
@@ -346,7 +371,7 @@ public class Player : NetworkBehaviour
         Inventory[index].IsHideVisual = false;
         Inventory[index].IsHideCollider = false;
         Inventory[index].Hide();
-        StartCoroutine(AttachOnParent(Inventory[index], itemCategory, Hand));
+        StartCoroutine(AttachOnParent(Inventory[index].gameObject, itemCategory, Hand));
         Inventory[index] = null;
         if (index == CurrentQuickSlotIndex)
         {
@@ -355,11 +380,11 @@ public class Player : NetworkBehaviour
     }
 
     // 부모 변경 후, 1프레임 대기하고 위치 변경
-    public IEnumerator AttachOnParent(Item item, Transform parent, Transform point)
+    public IEnumerator AttachOnParent(GameObject obj, Transform parent, Transform point)
     {
-        item.transform.SetParent(parent); // Network Transform 컴포넌트의 Sync Parent 체크
+        obj.transform.SetParent(parent); // Network Transform 컴포넌트의 Sync Parent 체크
         yield return null;
-        item.GetComponent<NetworkTransform>().Teleport(point.position, point.rotation); // 월드 포지션. 이거 안 하면 위치 조금 어긋남
+        obj.GetComponent<NetworkTransform>().Teleport(point.position, point.rotation); // 월드 포지션. 이거 안 하면 위치 조금 어긋남
     }
 
     // equipItemFlag가 true면 퀵슬롯 아이템 표시
@@ -485,5 +510,55 @@ public class Player : NetworkBehaviour
     {
         Debug.Log("추방당함");
         UIManager.Singleton._MenuConnection.SteamAuthFail();
+    }
+
+    private void CheckCharacterIndex()
+    {
+        while (CharacterQueue.Count > 0)
+        {
+            byte index = CharacterQueue.Dequeue();
+
+            if(UIManager.Singleton.CharacterIndex != index)
+            {
+                UIManager.Singleton.CharacterIndex = index;
+
+                if (HasStateAuthority)
+                {
+                    CharacterIndex = index;
+                    ChangeCharacter();
+                }
+                else
+                {
+                    RPC_ChangeCharacter(UIManager.Singleton.CharacterIndex);
+                }
+            }
+        }
+    }
+
+    private void ChangeCharacter()
+    {
+        if (myCharacter != null)
+        {
+            Destroy(myCharacter);
+        }
+
+        myCharacter = Instantiate(UIManager.Singleton.Characters[CharacterIndex], transform.position, transform.rotation, transform);
+        myAnimator = myCharacter.GetComponent<Animator>();
+
+        if (HasInputAuthority)
+        {
+            // 내 캐릭터의 일부 모델 파츠 렌더링 비활성화 (카메라 가림 방지)
+            foreach (SkinnedMeshRenderer renderer in myCharacter.GetComponent<CharacterInfo>().Visuals)
+            {
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+            }
+        }
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RPC_ChangeCharacter(byte index)
+    {
+        CharacterIndex = index;
+        ChangeCharacter();
     }
 }

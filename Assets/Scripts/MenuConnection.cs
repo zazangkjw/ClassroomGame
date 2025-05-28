@@ -239,7 +239,7 @@ public class MenuConnection : MonoBehaviour
         catch (System.Exception e)
         {
             UIManager.Singleton.OpenBlocking(true);
-            UIManager.Singleton.OpenSteamPopup(true);
+            UIManager.Singleton.OpenSteamPopUp(true);
             Debug.Log($"Steam Init Failed: {e.Message}");
             return;
         }
@@ -397,6 +397,7 @@ public class MenuConnection : MonoBehaviour
         //await runner.LoadScene("Lobby");
         onSessionConnected.Invoke();
         UIManager.Singleton.UIStack = 0;
+        UIManager.Singleton.IsFirstJoin = true;
     }
 
     public async void StartClient()
@@ -420,6 +421,7 @@ public class MenuConnection : MonoBehaviour
 
         onSessionConnected.Invoke();
         UIManager.Singleton.UIStack = 0;
+        UIManager.Singleton.IsFirstJoin = true;
     }
 
     public async void LeaveSession()
@@ -462,7 +464,7 @@ public class MenuConnection : MonoBehaviour
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
         UIManager.Singleton.SetKickedPopupMessage("Kicked by host");
-        UIManager.Singleton.OpenKickedPopup(true);
+        UIManager.Singleton.OpenKickedPopUp(true);
         UIManager.Singleton.OpenBlocking(true);
         if (GameStateManager.Singleton != null)
         {
@@ -484,7 +486,7 @@ public class MenuConnection : MonoBehaviour
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
         UIManager.Singleton.SetKickedPopupMessage("Steam auth failed");
-        UIManager.Singleton.OpenKickedPopup(true);
+        UIManager.Singleton.OpenKickedPopUp(true);
         UIManager.Singleton.OpenBlocking(true);
         if (GameStateManager.Singleton != null)
         {

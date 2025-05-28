@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using WebSocketSharp;
 
@@ -25,6 +26,9 @@ public class UIManager : MonoBehaviour
         "A",
         "B"
     };
+    public List<GameObject> Characters = new();
+    public byte CharacterIndex;
+    public bool IsFirstJoin;
 
     [SerializeField] private GameObject inventoryScreen;
     [SerializeField] private GameObject pauseScreen;
@@ -52,6 +56,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject kickedPopUp;
     [SerializeField] private TextMeshProUGUI kickedPopUpMessage;
     [SerializeField] private GameObject steamPopUp;
+    [SerializeField] private GameObject characterScreen;
 
     private PointerEventData pointerData;
     private List<RaycastResult> uiRaycasterResults = new();
@@ -144,6 +149,10 @@ public class UIManager : MonoBehaviour
                 {
                     OpenPause(false);
                 }
+                else if (characterScreen.activeSelf)
+                {
+                    OpenCharacterScreen(false);
+                }
             }
         }
 
@@ -183,6 +192,21 @@ public class UIManager : MonoBehaviour
             }
         }
 
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            if (SceneManager.GetActiveScene().name == "Lobby")
+            {
+                if (UIStack == 0)
+                {
+                    OpenCharacterScreen(true);
+                }
+                else if (characterScreen.activeSelf)
+                {
+                    OpenCharacterScreen(false);
+                }
+            }
+        }
+
         if (Input.GetMouseButtonDown(0) && chatInputField.gameObject.activeSelf && 
             EventSystem.current.currentSelectedGameObject != chatInputField.gameObject && 
             EventSystem.current.currentSelectedGameObject != chatScrollbarVertical)
@@ -191,6 +215,17 @@ public class UIManager : MonoBehaviour
         }
 
         CheckUIStack();
+    }
+
+    public void CloseAllUI()
+    {
+        OpenInventory(false);
+        OpenPause(false);
+        OpenChat(false);
+        OpenLeaderboard(false);
+        OpenKickPopUp(false);
+        OpenProjector(false);
+        OpenCharacterScreen(false);
     }
 
     // 인벤토리 열기/닫기
@@ -223,7 +258,6 @@ public class UIManager : MonoBehaviour
         {
             UIStack--;
             pauseScreen.SetActive(false);
-            EventSystem.current.SetSelectedGameObject(null);
         }
     }
 
@@ -271,7 +305,6 @@ public class UIManager : MonoBehaviour
         {
             UIStack++;
             kickPopUp.SetActive(true);
-            EventSystem.current.SetSelectedGameObject(null);
         }
         else if(!open && kickPopUp.activeSelf)
         {
@@ -291,7 +324,6 @@ public class UIManager : MonoBehaviour
         {
             UIStack--;
             projectorScreen.SetActive(false);
-            EventSystem.current.SetSelectedGameObject(null);
         }
     }
 
@@ -307,7 +339,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void OpenKickedPopup(bool open)
+    public void OpenKickedPopUp(bool open)
     {
         if (open && !kickedPopUp.activeSelf)
         {
@@ -321,7 +353,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void OpenSteamPopup(bool open)
+    public void OpenSteamPopUp(bool open)
     {
         if (open && !steamPopUp.activeSelf)
         {
@@ -332,6 +364,20 @@ public class UIManager : MonoBehaviour
         {
             UIStack--;
             steamPopUp.SetActive(false);
+        }
+    }
+
+    public void OpenCharacterScreen(bool open)
+    {
+        if (open && !characterScreen.activeSelf)
+        {
+            UIStack++;
+            characterScreen.SetActive(true);
+        }
+        else if (!open && characterScreen.activeSelf)
+        {
+            UIStack--;
+            characterScreen.SetActive(false);
         }
     }
 
@@ -380,7 +426,7 @@ public class UIManager : MonoBehaviour
                     // 다른 슬롯과 교체
                     if (result.gameObject.TryGetComponent(out Slot slot))
                     {
-                        LocalPlayer.SwitchItem(selectedSlotIndex, slot.slotIndex);
+                        LocalPlayer.SwitchItemIndexQueue.Enqueue((selectedSlotIndex, slot.slotIndex));
                         UpdateItemSlot(selectedSlotIndex, slot.itemImage.sprite);
                         UpdateItemSlot(slot.slotIndex, mouseImage.sprite);
                         mouseImage.sprite = null;
@@ -390,7 +436,7 @@ public class UIManager : MonoBehaviour
                     // 아이템 버리기
                     else if (result.gameObject == inventoryBackground.gameObject)
                     {
-                        LocalPlayer.DropItem(selectedSlotIndex);
+                        LocalPlayer.DropItemIndexQueue.Enqueue(selectedSlotIndex);
                         UpdateItemSlot(selectedSlotIndex, null);
                         mouseImage.sprite = null;
                         mouseImage.enabled = false;
@@ -520,6 +566,11 @@ public class UIManager : MonoBehaviour
     public void SetKickedPopupMessage(string text)
     {
         kickedPopUpMessage.text = text;
+    }
+
+    public void SelectCharacter(int index)
+    {
+        LocalPlayer.CharacterQueue.Enqueue((byte)index);
     }
 
     public void PlayPointerEnterSound()

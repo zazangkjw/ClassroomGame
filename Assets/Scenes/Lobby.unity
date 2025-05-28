@@ -830,7 +830,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerPrefab:
-    RawGuidValue: 19ff1a9f7d968c146bbc279a35a8c201
+    RawGuidValue: fd5e6aaef62cee4478ee1fedbd256007
   readyChairColliders:
   - {fileID: 698238835}
   - {fileID: 1527697099}
