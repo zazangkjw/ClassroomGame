@@ -106,8 +106,8 @@ QualitySettings:
     terrainFadeLength: 5
     terrainMaxTrees: 50
     excludedTargetPlatforms:
-    - Standalone
     - Server
+    - Standalone
   - serializedVersion: 3
     name: Performant
     pixelLightCount: 0

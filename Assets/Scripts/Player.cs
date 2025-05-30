@@ -1,10 +1,8 @@
 using Fusion;
 using Fusion.Addons.KCC;
 using Steamworks;
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -19,7 +17,11 @@ public class Player : NetworkBehaviour
     [SerializeField] private float interactionRange = 5f;
     [SerializeField] private byte inventorySize = 12;
     [SerializeField] private GameObject myCharacter;
+    [SerializeField] private GameObject myCharacterPOV;
     [SerializeField] private Animator myAnimator;
+    [SerializeField] private Transform aimTarget;
+    [SerializeField] private Transform povTarget;
+    [SerializeField] private Vector3 rotationCorrection;
 
     public KCC Kcc;
     public Transform CamTarget;
@@ -44,6 +46,7 @@ public class Player : NetworkBehaviour
     private InputManager inputManager;
     private Vector2 baseLookRotation;
     private Transform itemCategory;
+    private Transform spine; // 아바타의 상체
 
     public override void Spawned()
     {
@@ -104,6 +107,7 @@ public class Player : NetworkBehaviour
                 {
                     renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
                 }
+                myCharacterPOV.SetActive(true);
             }
 
             // 첫 입장 시, 캐릭터 선택창 켜기
@@ -121,6 +125,11 @@ public class Player : NetworkBehaviour
                 ChangeCharacter();
             }
         }
+    }
+
+    private void Start()
+    {
+        spine = myAnimator.GetBoneTransform(HumanBodyBones.Spine); // 상체값 가져오기 (허리 위)
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
@@ -180,6 +189,7 @@ public class Player : NetworkBehaviour
 
     public override void Render()
     {
+        // 카메라 타겟 로컬 회전
         if (Kcc.IsPredictingLookRotation)
         {
             Vector2 predictedLookRotation = baseLookRotation + inputManager.AccumulatedMouseDelta * lookSensitivity;
@@ -187,10 +197,18 @@ public class Player : NetworkBehaviour
         }
         UpdateCamTarget();
 
+        // 상호작용 레이캐스트 로컬 체크
         if (HasInputAuthority)
         {
             CheckInteractionLocal(CamTarget.forward);
         }
+    }
+
+    private void LateUpdate()
+    {
+        // 캐릭터 상체 회전
+        spine.LookAt(aimTarget);
+        spine.rotation = spine.rotation * Quaternion.Euler(rotationCorrection);
     }
 
     private void CheckJump(NetInput input)
@@ -540,10 +558,13 @@ public class Player : NetworkBehaviour
         if (myCharacter != null)
         {
             Destroy(myCharacter);
+            Destroy(myCharacterPOV);
         }
 
         myCharacter = Instantiate(UIManager.Singleton.Characters[CharacterIndex], transform.position, transform.rotation, transform);
+        myCharacterPOV = Instantiate(UIManager.Singleton.CharactersPOV[CharacterIndex], povTarget.position, povTarget.rotation, povTarget);
         myAnimator = myCharacter.GetComponent<Animator>();
+        spine = myAnimator.GetBoneTransform(HumanBodyBones.Spine);
 
         if (HasInputAuthority)
         {
@@ -552,6 +573,7 @@ public class Player : NetworkBehaviour
             {
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
             }
+            myCharacterPOV.SetActive(true);
         }
     }
 

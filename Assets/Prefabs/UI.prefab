@@ -11563,6 +11563,11 @@ MonoBehaviour:
   Characters:
   - {fileID: 7068494128560320996, guid: c374570498c947644975aba9966d1be2, type: 3}
   - {fileID: 446820585595839628, guid: 5a2ab8d8553a3bd4ba1afbb3c6a1c1f0, type: 3}
+  CharactersPOV:
+  - {fileID: 7068494128560320996, guid: 625e87ab7dfeebf4ca32a5c9e0071720, type: 3}
+  - {fileID: 446820585595839628, guid: f8058ac90f09a7f4fb19da7f1d36aa93, type: 3}
+  CharacterIndex: 0
+  IsFirstJoin: 0
   inventoryScreen: {fileID: 8191757009203519888}
   pauseScreen: {fileID: 8809821013716514980}
   nameInputField: {fileID: 7248379161514408837}
@@ -14101,7 +14106,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 5210689306612352628}
         m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
-        m_MethodName: OpenSteamPopup
+        m_MethodName: OpenSteamPopUp
         m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

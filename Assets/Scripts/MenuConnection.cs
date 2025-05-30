@@ -199,6 +199,7 @@ public class MenuConnection : MonoBehaviour
     public string TestSceneName;
     public string SessionName;
     public Lobby[] LobbyList;
+    public Lobby[] LobbyList2;
     public Lobby CurrentLobby;
     public AuthTicket Ticket;
 
@@ -279,7 +280,12 @@ public class MenuConnection : MonoBehaviour
     // 로비 리스트 업데이트
     public async Task UpdateLobbyListFromSteam()
     {
-        LobbyList = await SteamMatchmaking.LobbyList.FilterDistanceWorldwide().RequestAsync();
+        LobbyList = await SteamMatchmaking.LobbyList.FilterDistanceWorldwide().WithKeyValue("owner", "zazangkjw").RequestAsync();
+    }
+
+    public async Task UpdateLobbyListFromSteam2(string name)
+    {
+        LobbyList2 = await SteamMatchmaking.LobbyList.FilterDistanceWorldwide().WithKeyValue("name", name).RequestAsync();
     }
 
     // 방 목록 새로고침
@@ -292,7 +298,7 @@ public class MenuConnection : MonoBehaviour
 
         await UpdateLobbyListFromSteam();
 
-        if (LobbyList.Length > 0)
+        if (LobbyList != null && LobbyList.Length > 0)
         {
             RoomInfo room;
 
@@ -318,14 +324,17 @@ public class MenuConnection : MonoBehaviour
             return;
         }
 
-        await UpdateLobbyListFromSteam();
+        await UpdateLobbyListFromSteam2(SessionName);
 
-        foreach (var lobby in LobbyList)
+        if (LobbyList2 != null && LobbyList2.Length > 0)
         {
-            if (lobby.GetData("name") == SessionName && lobby.GetData("alive") == "true")
+            foreach (var lobby in LobbyList2)
             {
-                await SteamMatchmaking.JoinLobbyAsync(lobby.Id);
-                return;
+                if (lobby.GetData("alive") == "true")
+                {
+                    await SteamMatchmaking.JoinLobbyAsync(lobby.Id);
+                    return;
+                }
             }
         }
 
@@ -343,12 +352,15 @@ public class MenuConnection : MonoBehaviour
 
         await UpdateLobbyListFromSteam();
 
-        foreach (var lobby in LobbyList)
+        if (LobbyList != null && LobbyList.Length > 0)
         {
-            if (lobby.GetData("name") == SessionName)
+            foreach (var lobby in LobbyList)
             {
-                hostFailMessage.text = $"Already Exists";
-                return;
+                if (lobby.GetData("name") == SessionName)
+                {
+                    hostFailMessage.text = $"Already Exists";
+                    return;
+                }
             }
         }
 
@@ -364,6 +376,7 @@ public class MenuConnection : MonoBehaviour
         string fusionSession = Guid.NewGuid().ToString(); // 고유 식별자 생성
         var createLobby = await SteamMatchmaking.CreateLobbyAsync(maxPlayers);
         CurrentLobby = createLobby.Value;
+        CurrentLobby.SetData("owner", "zazangkjw");
         CurrentLobby.SetData("fusion_session", fusionSession);
         CurrentLobby.SetData("name", SessionName); // UI 표시용
         CurrentLobby.SetData("alive", "true");
@@ -398,6 +411,7 @@ public class MenuConnection : MonoBehaviour
         onSessionConnected.Invoke();
         UIManager.Singleton.UIStack = 0;
         UIManager.Singleton.IsFirstJoin = true;
+        UIManager.Singleton.CharacterIndex = 0;
     }
 
     public async void StartClient()
@@ -422,6 +436,7 @@ public class MenuConnection : MonoBehaviour
         onSessionConnected.Invoke();
         UIManager.Singleton.UIStack = 0;
         UIManager.Singleton.IsFirstJoin = true;
+        UIManager.Singleton.CharacterIndex = 0;
     }
 
     public async void LeaveSession()

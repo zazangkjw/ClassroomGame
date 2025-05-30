@@ -27,6 +27,7 @@ public class UIManager : MonoBehaviour
         "B"
     };
     public List<GameObject> Characters = new();
+    public List<GameObject> CharactersPOV = new();
     public byte CharacterIndex;
     public bool IsFirstJoin;
 
