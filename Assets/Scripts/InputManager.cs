@@ -15,16 +15,10 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
     public MenuConnection menuConnection;
     private NetInput accumulatedInput;
     private Vector2Accumulator mouseDeltaAccumulator = new() { SmoothingWindow = 0.025f };
-    private bool resetInput;
 
     public void BeforeUpdate()
     {
-        if (resetInput)
-        {
-            resetInput = false;
-            accumulatedInput = default;
-        }
-
+        accumulatedInput = default;
         Keyboard keyboard = Keyboard.current;
 
         if (Cursor.lockState != CursorLockMode.Locked)
@@ -106,7 +100,6 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
         accumulatedInput.Direction.Normalize();
         accumulatedInput.LookDelta = mouseDeltaAccumulator.ConsumeTickAligned(runner);
         input.Set(accumulatedInput);
-        resetInput = true;
     }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }

@@ -19,11 +19,13 @@ public class Player : NetworkBehaviour
     [SerializeField] private GameObject myCharacter;
     [SerializeField] private GameObject myCharacterPOV;
     [SerializeField] private Animator myAnimator;
-    [SerializeField] private Transform aimTarget;
+    [SerializeField] private Animator myAnimatorPOV;
     [SerializeField] private Transform povTarget;
-    [SerializeField] private Vector3 rotationCorrection;
 
     public KCC Kcc;
+    public float MasterSpeed;
+    public float WalkSpeed;
+    public float RunSpeed;
     public Transform CamTarget;
     public Transform Hand;
     public List<Item> Inventory = new();
@@ -35,10 +37,12 @@ public class Player : NetworkBehaviour
     public Queue<byte> CharacterQueue = new();
     public bool IsReady;
     public bool EquipItemFlag;
+    public bool IsGround;
 
     [Networked] public string Name { get; private set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
     [Networked, OnChangedRender(nameof(Jumped))] private int JumpSync { get; set; }
+    [Networked] private bool IsRunning { get; set; }
     [Networked, OnChangedRender(nameof(Hide))] public bool IsHideCollider { get; set; }
     [Networked] public bool IsBlockMovement { get; set; }
     [Networked, OnChangedRender(nameof(ChangeCharacter))] private byte CharacterIndex { get; set; }
@@ -47,6 +51,7 @@ public class Player : NetworkBehaviour
     private Vector2 baseLookRotation;
     private Transform itemCategory;
     private Transform spine; // 아바타의 상체
+    private List<Vector3> previousPos = new();
 
     public override void Spawned()
     {
@@ -125,6 +130,11 @@ public class Player : NetworkBehaviour
                 ChangeCharacter();
             }
         }
+
+        for (int i = 0; i < 5; i++)
+        {
+            previousPos.Add(transform.position);
+        }
     }
 
     private void Start()
@@ -202,13 +212,54 @@ public class Player : NetworkBehaviour
         {
             CheckInteractionLocal(CamTarget.forward);
         }
+
+        if (Physics.Raycast(transform.position + transform.up * 0.1f, -transform.up, out RaycastHit hitInfo, 0.4f))
+        {
+            IsGround = true;
+        }
+        else
+        {
+            IsGround = false;
+        }
+
+        // 애니메이션 블렌드 트리
+        Vector3 direction = transform.InverseTransformDirection((transform.position - previousPos[4]) / Time.deltaTime); // "이 월드 방향은 이 오브젝트 기준으로 어떤 방향인가?"를 계산. Quaternion.Inverse(transform.rotation) * (transform.position - previousPos)와 같음
+        for(int i = previousPos.Count - 1; i > 0; i--)
+        {
+            previousPos[i] = previousPos[i - 1];
+        }
+        previousPos[0] = transform.position;
+        int directionX = 0;
+        int directionZ = 0;
+        if (direction.x > 5f) { directionX = 1; }
+        else if (direction.x < -5f) { directionX = -1; }
+        if (direction.z > 5f) { directionZ = 1; }
+        else if (direction.z < -5f) { directionZ = -1; }
+        if (IsRunning) { directionX *= 2; directionZ *= 2; }
+        myAnimator.SetInteger("DirectionX", directionX);
+        myAnimator.SetInteger("DirectionZ", directionZ);
+        myAnimator.SetBool("Jump", !IsGround);
+        if (myAnimatorPOV.gameObject.activeSelf)
+        {
+            myAnimatorPOV.SetInteger("DirectionX", directionX);
+            myAnimatorPOV.SetInteger("DirectionZ", directionZ);
+            myAnimatorPOV.SetBool("Jump", !IsGround);
+        }
     }
 
     private void LateUpdate()
     {
         // 캐릭터 상체 회전
-        spine.LookAt(aimTarget);
-        spine.rotation = spine.rotation * Quaternion.Euler(rotationCorrection);
+        float x = CamTarget.localEulerAngles.x;
+        if (x < 180f)
+        {
+            x = x * (60f / 85f);
+        }
+        else
+        {
+            x = 360f - (360f - x) * (60f / 85f);
+        }
+        spine.localRotation = Quaternion.Euler(x, spine.localEulerAngles.y, spine.localEulerAngles.z);
     }
 
     private void CheckJump(NetInput input)
@@ -226,7 +277,14 @@ public class Player : NetworkBehaviour
     private void SetInputDirection(NetInput input)
     {
         Vector3 worldDirection;
-        worldDirection = Kcc.FixedData.TransformRotation * input.Direction.X0Y();
+        if (!IsRunning)
+        {
+            worldDirection = Kcc.FixedData.TransformRotation * input.Direction.X0Y() * WalkSpeed * MasterSpeed;
+        }
+        else
+        {
+            worldDirection = Kcc.FixedData.TransformRotation * input.Direction.X0Y() * RunSpeed * MasterSpeed;
+        }
         Kcc.SetInputDirection(worldDirection);
     }
 
@@ -564,6 +622,7 @@ public class Player : NetworkBehaviour
         myCharacter = Instantiate(UIManager.Singleton.Characters[CharacterIndex], transform.position, transform.rotation, transform);
         myCharacterPOV = Instantiate(UIManager.Singleton.CharactersPOV[CharacterIndex], povTarget.position, povTarget.rotation, povTarget);
         myAnimator = myCharacter.GetComponent<Animator>();
+        myAnimatorPOV = myCharacterPOV.GetComponent<Animator>();
         spine = myAnimator.GetBoneTransform(HumanBodyBones.Spine);
 
         if (HasInputAuthority)

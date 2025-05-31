@@ -405,7 +405,7 @@ public class MenuConnection : MonoBehaviour
             VersionString = "1.0.0"
         };
 
-        SteamServer.Init(480, init, true);
+        //SteamServer.Init(480, init, true); // 테스트 할 때는 지워야함. 안 그러면 뭔가 바뀔 때마다 에디터 재시작해야 함
 
         //await runner.LoadScene("Lobby");
         onSessionConnected.Invoke();
