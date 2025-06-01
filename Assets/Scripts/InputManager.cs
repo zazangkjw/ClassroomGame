@@ -51,6 +51,7 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
 
             accumulatedInput.Direction += moveDirection;
             buttons.Set(InputButton.Jump, keyboard.spaceKey.isPressed);
+            buttons.Set(InputButton.Run, keyboard.leftShiftKey.isPressed);
             buttons.Set(InputButton.Interaction, keyboard.eKey.isPressed);
 
             if (keyboard.digit1Key.isPressed)

@@ -373,10 +373,9 @@ MonoBehaviour:
   myAnimator: {fileID: 4334940885185416198}
   myAnimatorPOV: {fileID: 5546835906003192843}
   povTarget: {fileID: 7560301372224694161}
-  rotationCorrection: {x: 23, y: 0, z: 0}
   Kcc: {fileID: 1994501053748967507}
   MasterSpeed: 1
-  WalkSpeed: 0.2
+  WalkSpeed: 2
   RunSpeed: 4
   CamTarget: {fileID: 8716817890841864573}
   Hand: {fileID: 5200030936047140849}

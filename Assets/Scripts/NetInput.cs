@@ -4,6 +4,7 @@ using UnityEngine;
 public enum InputButton
 {
     Jump,
+    Run,
     Interaction,
 }
 

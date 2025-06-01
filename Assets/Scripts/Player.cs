@@ -4,6 +4,7 @@ using Steamworks;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class Player : NetworkBehaviour
@@ -23,6 +24,7 @@ public class Player : NetworkBehaviour
     [SerializeField] private Transform povTarget;
 
     public KCC Kcc;
+    public float CurrentSpeed { get { return Kcc.GetProcessor<EnvironmentProcessor>().KinematicSpeed; } set { Kcc.GetProcessor<EnvironmentProcessor>().KinematicSpeed = value; } }
     public float MasterSpeed;
     public float WalkSpeed;
     public float RunSpeed;
@@ -37,12 +39,13 @@ public class Player : NetworkBehaviour
     public Queue<byte> CharacterQueue = new();
     public bool IsReady;
     public bool EquipItemFlag;
-    public bool IsGround;
 
     [Networked] public string Name { get; private set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
     [Networked, OnChangedRender(nameof(Jumped))] private int JumpSync { get; set; }
+    [Networked] private byte Direction { get; set; }
     [Networked] private bool IsRunning { get; set; }
+    [Networked] private bool IsGround { get; set; }
     [Networked, OnChangedRender(nameof(Hide))] public bool IsHideCollider { get; set; }
     [Networked] public bool IsBlockMovement { get; set; }
     [Networked, OnChangedRender(nameof(ChangeCharacter))] private byte CharacterIndex { get; set; }
@@ -57,7 +60,7 @@ public class Player : NetworkBehaviour
     {
         if (!HasStateAuthority && HasInputAuthority)
         {
-            GetSteamAuthTicket();
+            //GetSteamAuthTicket();  // 테스트 할 때는 주석 처리
         }
 
         if (HasStateAuthority)
@@ -131,7 +134,8 @@ public class Player : NetworkBehaviour
             }
         }
 
-        for (int i = 0; i < 5; i++)
+        CurrentSpeed = WalkSpeed * MasterSpeed;
+        for (int i = 0; i < 2; i++)
         {
             previousPos.Add(transform.position);
         }
@@ -159,29 +163,23 @@ public class Player : NetworkBehaviour
             if (!IsBlockMovement)
             {
                 CheckJump(input);
+                CheckRun(input);
                 SetInputDirection(input);
             }
             else
             {
-                Kcc.SetInputDirection(Vector3.zero); // 이동 멈추기
-
-                // 점프 중이면 강제로 낙하하게 만들기
-                if (!Kcc.FixedData.IsGrounded && Kcc.FixedData.DynamicVelocity.y > 0f)
-                {
-                    Vector3 velocity = Kcc.FixedData.DynamicVelocity;
-                    velocity.y = 0f;
-                    Kcc.SetDynamicVelocity(velocity);
-                }
+                Kcc.SetKinematicVelocity(Vector3.zero); // 이동 멈추기
+                Kcc.SetDynamicVelocity(Vector3.zero); // 점프 멈추기
+                Kcc.SetExternalVelocity(Vector3.zero);
             }
 
             Kcc.AddLookRotation(input.LookDelta * lookSensitivity, -maxPitch, maxPitch);
-            UpdateCamTarget();
             Vector3 lookDirection = CamTarget.forward;
             CheckInteraction(input, lookDirection);
             CheckCurrentQuickSlot(input);
-
-            PreviousButtons = input.Buttons;
+            UpdateCamTarget();
             baseLookRotation = Kcc.GetLookRotation();
+            PreviousButtons = input.Buttons;
         }
 
         if (HasInputAuthority && Runner.IsForward)
@@ -213,36 +211,11 @@ public class Player : NetworkBehaviour
             CheckInteractionLocal(CamTarget.forward);
         }
 
-        if (Physics.Raycast(transform.position + transform.up * 0.1f, -transform.up, out RaycastHit hitInfo, 0.4f))
-        {
-            IsGround = true;
-        }
-        else
-        {
-            IsGround = false;
-        }
-
-        // 애니메이션 블렌드 트리
-        Vector3 direction = transform.InverseTransformDirection((transform.position - previousPos[4]) / Time.deltaTime); // "이 월드 방향은 이 오브젝트 기준으로 어떤 방향인가?"를 계산. Quaternion.Inverse(transform.rotation) * (transform.position - previousPos)와 같음
-        for(int i = previousPos.Count - 1; i > 0; i--)
-        {
-            previousPos[i] = previousPos[i - 1];
-        }
-        previousPos[0] = transform.position;
-        int directionX = 0;
-        int directionZ = 0;
-        if (direction.x > 5f) { directionX = 1; }
-        else if (direction.x < -5f) { directionX = -1; }
-        if (direction.z > 5f) { directionZ = 1; }
-        else if (direction.z < -5f) { directionZ = -1; }
-        if (IsRunning) { directionX *= 2; directionZ *= 2; }
-        myAnimator.SetInteger("DirectionX", directionX);
-        myAnimator.SetInteger("DirectionZ", directionZ);
+        myAnimator.SetInteger("Direction", Direction);
         myAnimator.SetBool("Jump", !IsGround);
         if (myAnimatorPOV.gameObject.activeSelf)
         {
-            myAnimatorPOV.SetInteger("DirectionX", directionX);
-            myAnimatorPOV.SetInteger("DirectionZ", directionZ);
+            myAnimatorPOV.SetInteger("Direction", Direction);
             myAnimatorPOV.SetBool("Jump", !IsGround);
         }
     }
@@ -264,9 +237,10 @@ public class Player : NetworkBehaviour
 
     private void CheckJump(NetInput input)
     {
+        IsGround = Kcc.FixedData.IsGrounded;
         if (input.Buttons.WasPressed(PreviousButtons, InputButton.Jump))
         {
-            if (Kcc.FixedData.IsGrounded)
+            if (IsGround)
             {
                 Kcc.Jump(jumpImpulse);
                 JumpSync++;
@@ -274,18 +248,44 @@ public class Player : NetworkBehaviour
         }
     }
 
+    private void CheckRun(NetInput input)
+    {
+        if (input.Buttons.WasPressed(PreviousButtons, InputButton.Run))
+        {
+            CurrentSpeed = RunSpeed * MasterSpeed;
+            IsRunning = true;
+        }
+        else if(input.Buttons.WasReleased(PreviousButtons, InputButton.Run))
+        {
+            CurrentSpeed = WalkSpeed * MasterSpeed;
+            IsRunning = false;
+        }
+    }
+
     private void SetInputDirection(NetInput input)
     {
         Vector3 worldDirection;
-        if (!IsRunning)
-        {
-            worldDirection = Kcc.FixedData.TransformRotation * input.Direction.X0Y() * WalkSpeed * MasterSpeed;
-        }
-        else
-        {
-            worldDirection = Kcc.FixedData.TransformRotation * input.Direction.X0Y() * RunSpeed * MasterSpeed;
-        }
+        worldDirection = Kcc.FixedData.TransformRotation * input.Direction.X0Y();
         Kcc.SetInputDirection(worldDirection);
+
+        if(input.Direction.y == 0)
+        {
+            if (input.Direction.x == 0) { Direction = 0; }
+            else if (input.Direction.x > 0) { Direction = 3; }
+            else if (input.Direction.x < 0) { Direction = 7; }
+        }
+        else if (input.Direction.y > 0)
+        {
+            if(input.Direction.x == 0) { Direction = 1; }
+            else if(input.Direction.x > 0) { Direction = 2; }
+            else if (input.Direction.x < 0) { Direction = 8; }
+        }
+        else if(input.Direction.y < 0)
+        {
+            if (input.Direction.x == 0) { Direction = 5; }
+            else if (input.Direction.x > 0) { Direction = 4; }
+            else if (input.Direction.x < 0) { Direction = 6; }
+        }
     }
 
     private void UpdateCamTarget()
