@@ -14,7 +14,7 @@ public class Player : NetworkBehaviour
     [SerializeField] private AudioSource source;
     [SerializeField] private float maxPitch = 85f;
     [SerializeField] private float lookSensitivity = 0.15f;
-    [SerializeField] private Vector3 jumpImpulse = new(0f, 10f, 0f);
+    [SerializeField] private Vector3 jumpImpulse = new(0f, 2f, 0f);
     [SerializeField] private float interactionRange = 5f;
     [SerializeField] private byte inventorySize = 12;
     [SerializeField] private GameObject myCharacter;
@@ -22,12 +22,9 @@ public class Player : NetworkBehaviour
     [SerializeField] private Animator myAnimator;
     [SerializeField] private Animator myAnimatorPOV;
     [SerializeField] private Transform povTarget;
+    [SerializeField] private EnvironmentProcessor runProcessor;
 
     public KCC Kcc;
-    public float CurrentSpeed { get { return Kcc.GetProcessor<EnvironmentProcessor>().KinematicSpeed; } set { Kcc.GetProcessor<EnvironmentProcessor>().KinematicSpeed = value; } }
-    public float MasterSpeed;
-    public float WalkSpeed;
-    public float RunSpeed;
     public Transform CamTarget;
     public Transform Hand;
     public List<Item> Inventory = new();
@@ -40,7 +37,7 @@ public class Player : NetworkBehaviour
     public bool IsReady;
     public bool EquipItemFlag;
 
-    [Networked] public string Name { get; private set; }
+    [Networked] public string SteamName { get; private set; }
     [Networked] private NetworkButtons PreviousButtons { get; set; }
     [Networked, OnChangedRender(nameof(Jumped))] private int JumpSync { get; set; }
     [Networked] private byte Direction { get; set; }
@@ -54,7 +51,6 @@ public class Player : NetworkBehaviour
     private Vector2 baseLookRotation;
     private Transform itemCategory;
     private Transform spine; // 아바타의 상체
-    private List<Vector3> previousPos = new();
 
     public override void Spawned()
     {
@@ -69,7 +65,7 @@ public class Player : NetworkBehaviour
 
             if (HasInputAuthority)
             {
-                Name = UIManager.Singleton.Name;
+                SteamName = SteamClient.Name;
             }
         }
 
@@ -83,7 +79,7 @@ public class Player : NetworkBehaviour
             inputManager = Runner.GetComponent<InputManager>();
 
             // 플레이어 이름 RPC 호출
-            RPC_PlayerName(UIManager.Singleton.Name);
+            RPC_PlayerName(SteamClient.Name);
 
             // 카메라 설정 및 UI 연결
             CameraFollow.Singleton.SetTarget(CamTarget, this);
@@ -132,12 +128,6 @@ public class Player : NetworkBehaviour
             {
                 ChangeCharacter();
             }
-        }
-
-        CurrentSpeed = WalkSpeed * MasterSpeed;
-        for (int i = 0; i < 2; i++)
-        {
-            previousPos.Add(transform.position);
         }
     }
 
@@ -252,20 +242,19 @@ public class Player : NetworkBehaviour
     {
         if (input.Buttons.WasPressed(PreviousButtons, InputButton.Run))
         {
-            CurrentSpeed = RunSpeed * MasterSpeed;
+            Kcc.AddModifier(runProcessor);
             IsRunning = true;
         }
         else if(input.Buttons.WasReleased(PreviousButtons, InputButton.Run))
         {
-            CurrentSpeed = WalkSpeed * MasterSpeed;
+            Kcc.RemoveModifier(runProcessor);
             IsRunning = false;
         }
     }
 
     private void SetInputDirection(NetInput input)
     {
-        Vector3 worldDirection;
-        worldDirection = Kcc.FixedData.TransformRotation * input.Direction.X0Y();
+        Vector3 worldDirection = transform.rotation * input.Direction.X0Y();
         Kcc.SetInputDirection(worldDirection);
 
         if(input.Direction.y == 0)
@@ -301,7 +290,7 @@ public class Player : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_PlayerName(string name)
     {
-        Name = name;
+        SteamName = name;
     }
 
     // 상호작용
@@ -352,6 +341,11 @@ public class Player : NetworkBehaviour
                 {
                     interactable.InteractLocal(this);
                 }
+            }
+            // 플레이어
+            else if (hitInfo.collider.transform.parent.TryGetComponent(out Player player))
+            {
+                UIManager.Singleton.MouseText.text = player.SteamName;
             }
             else
             {
@@ -504,7 +498,7 @@ public class Player : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority | RpcSources.InputAuthority, RpcTargets.All)]
     public void RPC_PlayerSendMessage(string message)
     {
-        UIManager.Singleton.UpdateChat($"{Name}: {message}");
+        UIManager.Singleton.UpdateChat($"{SteamName}: {message}");
     }
 
     private void CheckKickPlayer()

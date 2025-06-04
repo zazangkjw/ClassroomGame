@@ -365,7 +365,7 @@ MonoBehaviour:
   source: {fileID: 8221385303638908559}
   maxPitch: 85
   lookSensitivity: 0.15
-  jumpImpulse: {x: 0, y: 10, z: 0}
+  jumpImpulse: {x: 0, y: 2, z: 0}
   interactionRange: 2
   inventorySize: 12
   myCharacter: {fileID: 7026514528762776774}
@@ -373,18 +373,16 @@ MonoBehaviour:
   myAnimator: {fileID: 4334940885185416198}
   myAnimatorPOV: {fileID: 5546835906003192843}
   povTarget: {fileID: 7560301372224694161}
+  runProcessor: {fileID: 3065194890126609874, guid: 6902764b5dd0cdf4faf669b9d54f0dd7,
+    type: 3}
   Kcc: {fileID: 1994501053748967507}
-  MasterSpeed: 1
-  WalkSpeed: 2
-  RunSpeed: 4
   CamTarget: {fileID: 8716817890841864573}
   Hand: {fileID: 5200030936047140849}
   Inventory: []
   CurrentQuickSlotIndex: 0
   IsReady: 0
   EquipItemFlag: 0
-  IsGround: 0
-  _Name: 
+  _SteamName: 
   _IsHideCollider: 0
   _IsBlockMovement: 0
 --- !u!114 &1994501053748967507
@@ -403,7 +401,7 @@ MonoBehaviour:
   _settings:
     Shape: 1
     IsTrigger: 0
-    Radius: 0.35
+    Radius: 0.2
     Height: 1.8
     Extent: 0.035
     ColliderLayer: 3
@@ -460,7 +458,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 3
   SphereRadius: 0
-  CapsuleRadius: 0.35
+  CapsuleRadius: 0.2
   BoxExtents: {x: 0, y: 0, z: 0}
   CapsuleExtents: 1.8
   Offset: {x: 0, y: 0.9, z: 0}

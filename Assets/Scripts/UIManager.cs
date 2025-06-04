@@ -503,7 +503,7 @@ public class UIManager : MonoBehaviour
             if (i < players.Length)
             {
                 leaderboardItems[i].playerRef = players[i].Key;
-                leaderboardItems[i].nameText.text = players[i].Value.Name;
+                leaderboardItems[i].nameText.text = players[i].Value.SteamName;
                 if (LocalPlayer.HasStateAuthority && leaderboardItems[i].playerRef != LocalPlayer.Runner.LocalPlayer)
                 {
                     leaderboardItems[i].kickButton.gameObject.SetActive(true);

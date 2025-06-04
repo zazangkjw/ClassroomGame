@@ -270,6 +270,7 @@ public class MenuConnection : MonoBehaviour
         SceneManager.LoadScene("Main");
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
+        UIManager.Singleton.MouseText.text = "";
         if (GameStateManager.Singleton != null)
         {
             Destroy(GameStateManager.Singleton);
@@ -289,6 +290,7 @@ public class MenuConnection : MonoBehaviour
         SceneManager.LoadScene("Main");
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
+        UIManager.Singleton.MouseText.text = "";
         UIManager.Singleton.SetKickedPopupMessage("Kicked by host");
         UIManager.Singleton.OpenKickedPopUp(true);
         UIManager.Singleton.OpenBlocking(true);
@@ -311,6 +313,7 @@ public class MenuConnection : MonoBehaviour
         SceneManager.LoadScene("Main");
         onSessionDisconnected.Invoke();
         UIManager.Singleton.UIStack = 0;
+        UIManager.Singleton.MouseText.text = "";
         UIManager.Singleton.SetKickedPopupMessage("Steam auth failed");
         UIManager.Singleton.OpenKickedPopUp(true);
         UIManager.Singleton.OpenBlocking(true);
