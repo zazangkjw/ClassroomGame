@@ -58,43 +58,24 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8113662451844533969, guid: b6f297df37c328e488da91fd049159e4,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 9e7afe00cc038934ba6704f6f7e1fd83, type: 2}
-    - target: {fileID: -6439692978013619079, guid: b6f297df37c328e488da91fd049159e4,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 21e5636dccef69746a5c532a2f26bd2b, type: 2}
     - target: {fileID: 919132149155446097, guid: b6f297df37c328e488da91fd049159e4,
         type: 3}
       propertyPath: m_Name
       value: Ch22_nonPBR
       objectReference: {fileID: 0}
-    - target: {fileID: 1581014216829998132, guid: b6f297df37c328e488da91fd049159e4,
+    - target: {fileID: 5866666021909216657, guid: b6f297df37c328e488da91fd049159e4,
         type: 3}
-      propertyPath: m_Materials.Array.data[0]
+      propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 2100000, guid: 21e5636dccef69746a5c532a2f26bd2b, type: 2}
-    - target: {fileID: 7116774802218284060, guid: b6f297df37c328e488da91fd049159e4,
+      objectReference: {fileID: 9100000, guid: 58654e3fe93d7f64dac0a2e2eb128037, type: 2}
+    - target: {fileID: 5866666021909216657, guid: b6f297df37c328e488da91fd049159e4,
         type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 9e7afe00cc038934ba6704f6f7e1fd83, type: 2}
-    - target: {fileID: 7500829582323976533, guid: b6f297df37c328e488da91fd049159e4,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 21e5636dccef69746a5c532a2f26bd2b, type: 2}
-    - target: {fileID: 7927558736831396235, guid: b6f297df37c328e488da91fd049159e4,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 21e5636dccef69746a5c532a2f26bd2b, type: 2}
+      propertyPath: m_ApplyRootMotion
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 6035137380349135365, guid: b6f297df37c328e488da91fd049159e4, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b6f297df37c328e488da91fd049159e4,

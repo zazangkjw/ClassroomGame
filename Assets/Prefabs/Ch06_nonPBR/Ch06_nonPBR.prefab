@@ -58,28 +58,24 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -5109604030079018270, guid: 3c0d6ef7629be7147b1eb523507e028e,
+    - target: {fileID: -716572887611881283, guid: 3c0d6ef7629be7147b1eb523507e028e,
         type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: b77b6344fd9a0aa4986612213aa6192d, type: 2}
-    - target: {fileID: -5109604030079018270, guid: 3c0d6ef7629be7147b1eb523507e028e,
-        type: 3}
-      propertyPath: m_Materials.Array.data[1]
-      value: 
-      objectReference: {fileID: 2100000, guid: 653f0550992248c4fbb312661ebcb220, type: 2}
-    - target: {fileID: -5109604030079018270, guid: 3c0d6ef7629be7147b1eb523507e028e,
-        type: 3}
-      propertyPath: m_Materials.Array.data[2]
-      value: 
-      objectReference: {fileID: 2100000, guid: fc510797890c1e94b8c701bfa3136a8e, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 3c0d6ef7629be7147b1eb523507e028e,
         type: 3}
       propertyPath: m_Name
       value: Ch06_nonPBR
       objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 3c0d6ef7629be7147b1eb523507e028e,
+        type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 58654e3fe93d7f64dac0a2e2eb128037, type: 2}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: -716572887611881283, guid: 3c0d6ef7629be7147b1eb523507e028e, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3c0d6ef7629be7147b1eb523507e028e,

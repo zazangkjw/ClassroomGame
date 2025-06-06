@@ -58,43 +58,24 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -4720266917285583275, guid: 9d3da00f2e80d6c4b846c19c26d7459c,
+    - target: {fileID: -894661444990420008, guid: 9d3da00f2e80d6c4b846c19c26d7459c,
         type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 55da9d34afd20e84f83aab6d97302515, type: 2}
-    - target: {fileID: -4447760368756750072, guid: 9d3da00f2e80d6c4b846c19c26d7459c,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: fc2239e46d6208641b18610264d91da1, type: 2}
-    - target: {fileID: -2459403873603802174, guid: 9d3da00f2e80d6c4b846c19c26d7459c,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: fc2239e46d6208641b18610264d91da1, type: 2}
-    - target: {fileID: -1713863184840326876, guid: 9d3da00f2e80d6c4b846c19c26d7459c,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: fc2239e46d6208641b18610264d91da1, type: 2}
-    - target: {fileID: 300856674195739684, guid: 9d3da00f2e80d6c4b846c19c26d7459c,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: fc2239e46d6208641b18610264d91da1, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 9d3da00f2e80d6c4b846c19c26d7459c,
         type: 3}
       propertyPath: m_Name
       value: Ch02_nonPBR
       objectReference: {fileID: 0}
-    - target: {fileID: 4083171560036875027, guid: 9d3da00f2e80d6c4b846c19c26d7459c,
+    - target: {fileID: 5866666021909216657, guid: 9d3da00f2e80d6c4b846c19c26d7459c,
         type: 3}
-      propertyPath: m_Materials.Array.data[0]
+      propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 2100000, guid: 55da9d34afd20e84f83aab6d97302515, type: 2}
+      objectReference: {fileID: 9100000, guid: 58654e3fe93d7f64dac0a2e2eb128037, type: 2}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: -894661444990420008, guid: 9d3da00f2e80d6c4b846c19c26d7459c, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9d3da00f2e80d6c4b846c19c26d7459c,

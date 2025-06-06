@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 451966688376914609}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -1.411, z: 0}
+  m_LocalPosition: {x: 0, y: -1.411, z: -0.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -365,7 +365,7 @@ MonoBehaviour:
   source: {fileID: 8221385303638908559}
   maxPitch: 85
   lookSensitivity: 0.15
-  jumpImpulse: {x: 0, y: 2, z: 0}
+  jumpImpulse: {x: 0, y: 5, z: 0}
   interactionRange: 2
   inventorySize: 12
   myCharacter: {fileID: 7026514528762776774}
@@ -476,11 +476,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Ch01_nonPBR
-      objectReference: {fileID: 0}
-    - target: {fileID: 7068494128560320996, guid: c374570498c947644975aba9966d1be2,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7589556414473169758, guid: c374570498c947644975aba9966d1be2,
         type: 3}

@@ -343,7 +343,7 @@ public class Player : NetworkBehaviour
                 }
             }
             // 플레이어
-            else if (hitInfo.collider.transform.parent.TryGetComponent(out Player player))
+            else if (hitInfo.collider.transform.parent != null && hitInfo.collider.transform.parent.TryGetComponent(out Player player))
             {
                 UIManager.Singleton.MouseText.text = player.SteamName;
             }
