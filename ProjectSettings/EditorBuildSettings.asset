@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Lobby.unity
     guid: 428d4c847d56a994090a3aedeb803e41
+  - enabled: 1
+    path: Assets/Scenes/CornerGame.unity
+    guid: 2444089f96e477c4a881f4c6793ee575
   m_configObjects: {}

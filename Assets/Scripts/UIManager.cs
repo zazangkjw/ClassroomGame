@@ -21,11 +21,7 @@ public class UIManager : MonoBehaviour
     public MenuConnection _MenuConnection;
     public TextMeshProUGUI CountdownText;
     public List<string> VideoList = new();
-    public List<string> VideoListOriginal = new List<string>
-    {
-        "A",
-        "B"
-    };
+    public List<string> VideoListOriginal = new();
     public List<GameObject> Characters = new();
     public List<GameObject> CharactersPOV = new();
     public byte CharacterIndex;
@@ -58,6 +54,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI kickedPopUpMessage;
     [SerializeField] private GameObject steamPopUp;
     [SerializeField] private GameObject characterScreen;
+    [SerializeField] private TextMeshProUGUI episodeText;
+    [SerializeField] private TextMeshProUGUI episodeText2;
 
     private PointerEventData pointerData;
     private List<RaycastResult> uiRaycasterResults = new();
@@ -85,7 +83,10 @@ public class UIManager : MonoBehaviour
             itemSlots[i].slotIndex = i;
         }
 
-        VideoList = VideoListOriginal; // 언어별 비디오 이름 적용하기
+        // 언어별 비디오 이름 적용하기
+        VideoList = VideoListOriginal;
+        episodeText.text = VideoList[0].ToString();
+        episodeText2.text = VideoList[1].ToString();
     }
 
     private void Update()

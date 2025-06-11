@@ -45,7 +45,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07d2038c08f975f42b0e1f05106d1e3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PlayerPrefab:
+    RawGuidValue: fd5e6aaef62cee4478ee1fedbd256007
+  AuthenticatedPlayers: 
+  IsAllLoaded: 0
+  SceneLoadDoneCount: 0
   _SelectedVideoIndex: 0
+  _Players:
+    _items: []
 --- !u!114 &1415232605077793579
 MonoBehaviour:
   m_ObjectHideFlags: 0

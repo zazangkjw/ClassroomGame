@@ -14734,7 +14734,7 @@ MonoBehaviour:
   - A
   - B
   VideoListOriginal:
-  - A
+  - CornerGame
   - B
   Characters:
   - {fileID: 7068494128560320996, guid: c374570498c947644975aba9966d1be2, type: 3}
@@ -14814,6 +14814,8 @@ MonoBehaviour:
   kickedPopUpMessage: {fileID: 1197188240810024}
   steamPopUp: {fileID: 6431119513466953547}
   characterScreen: {fileID: 2789155610912102780}
+  episodeText: {fileID: 7609269646892709327}
+  episodeText2: {fileID: 3976909071642275976}
 --- !u!114 &1705850645671701625
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14826,7 +14828,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f52f0f0670533d479f361dd6b979595, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TestSceneName: 
+  IsTest: 0
   SessionName: 
   runnerPrefab: {fileID: 4779440297879285836, guid: 9a993296db27cfb4297d4e76ab01e50d,
     type: 3}

@@ -2,44 +2,25 @@ using Fusion;
 using System.Linq;
 using UnityEngine;
 
-public class GameLogicCornerGame : NetworkBehaviour, IPlayerJoined, IPlayerLeft
+public class GameLogicCornerGame : NetworkBehaviour
 {
-    [SerializeField] private NetworkPrefabRef playerPrefab;
-
-    [Networked, Capacity(10)] private NetworkDictionary<PlayerRef, Player> Players => default;
-
     public override void Spawned()
     {
         Runner.SetIsSimulated(Object, true);
+
+        if (Runner.IsServer)
+        {
+            GameStateManager.Singleton.SpawnCharacter();
+        }
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (Players.Count < 1)
-            return;
-
-        if (!Runner.IsResimulation && UIManager.Singleton.LeaderboardScreen.activeSelf)
-            UIManager.Singleton.UpdateLeaderboard(Players.ToArray());
-    }
-
-    public void PlayerJoined(PlayerRef player)
-    {
-        if (HasStateAuthority)
+        // 로딩 다 될 때까지 대기 후 연출 시작
+        if (Runner.IsServer && Runner.IsForward && GameStateManager.Singleton.IsAllLoaded)
         {
-            NetworkObject playerObject = Runner.Spawn(playerPrefab, Vector3.up * 2, Quaternion.identity, player);
-            Players.Add(player, playerObject.GetComponent<Player>());
-        }
-    }
-
-    public void PlayerLeft(PlayerRef player)
-    {
-        if (!HasStateAuthority)
-            return;
-
-        if (Players.TryGet(player, out Player playerBehaviour))
-        {
-            Players.Remove(player);
-            Runner.Despawn(playerBehaviour.Object);
+            GameStateManager.Singleton.IsAllLoaded = false;
+            // rpc로 연출 시작 신호
         }
     }
 }

@@ -4,6 +4,7 @@ using Fusion.Sockets;
 using Steamworks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,8 +12,8 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
 {
     public Vector2 AccumulatedMouseDelta => mouseDeltaAccumulator.AccumulatedValue;
     public Byte currentQuickSlotIndex;
-
     public MenuConnection menuConnection;
+
     private NetInput accumulatedInput;
     private Vector2Accumulator mouseDeltaAccumulator = new() { SmoothingWindow = 0.025f };
 
@@ -122,7 +123,8 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
     {
         if (runner.IsServer && player != runner.LocalPlayer)
         {
-            Debug.Log("OnPlayerLeft");
+            Debug.Log("플레이어 나가서 로비로 복귀");
+            runner.LoadScene("Lobby");
         }
     }
 
@@ -130,9 +132,33 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
 
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
 
-    public void OnSceneLoadDone(NetworkRunner runner) { }
+    public void OnSceneLoadDone(NetworkRunner runner) 
+    {
+        if (runner.IsServer && !UIManager.Singleton.IsFirstJoin)
+        {
+            GameStateManager.Singleton.SceneLoadDoneCount++;
+            if (GameStateManager.Singleton.SceneLoadDoneCount >= Runner.ActivePlayers.Count())
+            {
+                GameStateManager.Singleton.IsAllLoaded = true;
+                Debug.Log("모두 로딩 완료");
+            }
+        }
+        else if(!runner.IsServer && !UIManager.Singleton.IsFirstJoin)
+        {
+            GameStateManager.Singleton.RPC_SceneLoadDone();
+        }
+    }
 
-    public void OnSceneLoadStart(NetworkRunner runner) { }
+
+
+    public void OnSceneLoadStart(NetworkRunner runner) 
+    {
+        if (runner.IsServer && !UIManager.Singleton.IsFirstJoin)
+        {
+            GameStateManager.Singleton.SceneLoadDoneCount = 0;
+            GameStateManager.Singleton.IsAllLoaded = false;
+        }
+    }
 
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) 
     {

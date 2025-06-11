@@ -1,22 +1,18 @@
 using Fusion;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 
-public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
+public class GameLogicLobby : NetworkBehaviour
 {
-    [SerializeField] private NetworkPrefabRef playerPrefab;
     [SerializeField] private Collider[] readyChairColliders;
     [SerializeField] private Light thunderLight;
     [SerializeField] private AudioSource thunderSfx;
     [SerializeField] private VideoPlayer countdownVideo;
     [SerializeField] private TextMeshProUGUI projectorText;
 
-    [Networked, Capacity(10)] private NetworkDictionary<PlayerRef, Player> Players => default;
     [Networked] private TickTimer ThunderTickTimer { get; set; }
     [Networked, OnChangedRender(nameof(CountDown))] private bool IsCountdown { get; set; }
 
@@ -29,6 +25,11 @@ public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         Runner.SetIsSimulated(Object, true);
         countdownVideo.loopPointReached += OnCountdownEnd;
+
+        if (Runner.IsServer && !UIManager.Singleton.IsFirstJoin)
+        {
+            GameStateManager.Singleton.SpawnCharacter();
+        }
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
@@ -41,47 +42,18 @@ public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
     public override void FixedUpdateNetwork()
     {
-        if (Players.Count >= 1)
+        if (HasStateAuthority && Runner.IsForward)
         {
-            if (Runner.IsForward && UIManager.Singleton.LeaderboardScreen.activeSelf)
-            {
-                UIManager.Singleton.UpdateLeaderboard(Players.ToArray());
-            }
-
-            if (HasStateAuthority && Runner.IsForward)
-            {
-                CheckReady();
-            }
-
-            Thunder();
-            UpdateProjectorText();
+            CheckReady();
         }
-    }
 
-    public void PlayerJoined(PlayerRef player)
-    {
-        if (HasStateAuthority)
-        {
-            NetworkObject playerObject = Runner.Spawn(playerPrefab, Vector3.up * 2, Quaternion.identity, player);
-            Players.Add(player, playerObject.GetComponent<Player>());
-        }
-    }
-
-    public void PlayerLeft(PlayerRef player)
-    {
-        if (HasStateAuthority)
-        {
-            if (Players.TryGet(player, out Player playerBehaviour))
-            {
-                Players.Remove(player);
-                Runner.Despawn(playerBehaviour.Object);
-            }
-        }
+        Thunder();
+        UpdateProjectorText();
     }
 
     public void CheckReady()
     {
-        foreach (var player in Players)
+        foreach (var player in GameStateManager.Singleton.Players)
         {
             if (!player.Value.IsReady)
             {
@@ -132,7 +104,7 @@ public class GameLogicLobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         {
             Debug.Log(GameStateManager.Singleton.SelectedVideoIndex);
             UIManager.Singleton._MenuConnection.CurrentLobby.SetPrivate();
-            //Runner.LoadScene(UIManager.Singleton.VideoListOriginal[GameStateManager.Singleton.SelectedVideoIndex]);
+            Runner.LoadScene(UIManager.Singleton.VideoListOriginal[GameStateManager.Singleton.SelectedVideoIndex]);
         }
     }
 

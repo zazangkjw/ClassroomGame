@@ -61,7 +61,7 @@ public class Player : NetworkBehaviour
 
         if (HasStateAuthority)
         {
-            itemCategory = GameObject.Find("Items").transform;
+            itemCategory = GameObject.Find("----- Items -----").transform;
 
             if (HasInputAuthority)
             {

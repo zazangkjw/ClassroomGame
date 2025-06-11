@@ -11,7 +11,7 @@ using WebSocketSharp;
 
 public class MenuConnection : MonoBehaviour
 {
-    public string TestSceneName;
+    public bool IsTest;
     public string SessionName;
     public Lobby[] LobbyList;
     public Lobby[] LobbyList2;
@@ -46,6 +46,71 @@ public class MenuConnection : MonoBehaviour
         SteamClient.Shutdown();
     }
 
+    private async void Test()
+    {
+        SessionName = "Test";
+
+        await UpdateLobbyListFromSteam2(SessionName);
+
+        if (LobbyList2 != null && LobbyList2.Length > 0)
+        {
+            foreach (var lobby in LobbyList2)
+            {
+                if (lobby.GetData("alive") == "true")
+                {
+                    await SteamMatchmaking.JoinLobbyAsync(lobby.Id);
+                    return;
+                }
+            }
+        }
+
+        if (runner == null)
+        {
+            runner = Instantiate(runnerPrefab);
+            runner.GetComponent<InputManager>().menuConnection = this;
+        }
+
+        isHost = true;
+
+        string fusionSession = Guid.NewGuid().ToString(); // 고유 식별자 생성
+        var createLobby = await SteamMatchmaking.CreateLobbyAsync(maxPlayers);
+        CurrentLobby = createLobby.Value;
+        CurrentLobby.SetData("owner", "zazangkjw");
+        CurrentLobby.SetData("fusion_session", fusionSession);
+        CurrentLobby.SetData("name", SessionName); // UI 표시용
+        CurrentLobby.SetData("alive", "true");
+        if (true) // 공개 체크되어 있으면 로비 공개
+        {
+            CurrentLobby.SetPublic();
+        }
+
+        var sceneInfo = new NetworkSceneInfo(); // 씬 정보를 저장하는 구조체로, 최대 8개의 씬을 저장 가능(Addictive)
+        sceneInfo.AddSceneRef(SceneRef.FromIndex(1), LoadSceneMode.Single); // 단일씬 추가
+
+        await runner.StartGame(new StartGameArgs()
+        {
+            GameMode = GameMode.Host,
+            SessionName = fusionSession,
+            SceneManager = runner.GetComponent<NetworkSceneManagerDefault>(),
+            PlayerCount = maxPlayers,
+            Scene = sceneInfo
+        });
+
+        var init = new SteamServerInit("default", "zazangkjw Multiplayer Server")
+        {
+            GamePort = 27015,
+            QueryPort = 27016,
+            Secure = true,
+            VersionString = "1.0.0"
+        };
+        //SteamServer.Init(480, init, true); // 테스트 할 때는 주석 처리. 안 그러면 뭔가 바뀔 때마다 에디터 재시작해야 함
+
+        onSessionConnected.Invoke();
+        UIManager.Singleton.UIStack = 0;
+        UIManager.Singleton.IsFirstJoin = true;
+        UIManager.Singleton.CharacterIndex = 0;
+    }
+
     public void TrySteamClientInit()
     {
         try
@@ -61,6 +126,12 @@ public class MenuConnection : MonoBehaviour
         }
 
         UIManager.Singleton.OpenBlocking(false);
+
+        if (IsTest)
+        {
+            IsTest = false;
+            Test();
+        }
     }
 
     public void QuitGame()
