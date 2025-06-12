@@ -41,7 +41,7 @@ public class Corner : SimulationBehaviour
             {
                 if (!player.IsTagger)
                 {
-                    player.GetComponent<Player>().Teleport(transform.position, player.transform.rotation);
+                    player.GetComponent<Player>().TeleportQueue.Enqueue((transform.position, player.transform.rotation, true, true));
                 }
             }
         }

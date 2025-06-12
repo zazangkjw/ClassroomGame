@@ -190,7 +190,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6e96480d91fdbe459ddd93c6619a98b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IsStarted: 0
+  PlayerPrefab:
+    RawGuidValue: a1b991fd6733dc64784e8257705c86bd
+  _IsStarted: 0
   corners:
   - {fileID: 594596306}
   - {fileID: 1960155045}

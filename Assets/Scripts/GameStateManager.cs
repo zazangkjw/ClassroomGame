@@ -14,9 +14,7 @@ public class GameStateManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     public byte SceneLoadDoneCount;
 
     [Networked] public byte SelectedVideoIndex { get; set; }
-    [Networked, Capacity(10)] public NetworkDictionary<PlayerRef, Player> Players => default;
-
-
+    [Networked, Capacity(10)] public NetworkDictionary<PlayerRef, NetworkObject> Players => default;
 
     public override void Spawned()
     {
@@ -48,7 +46,7 @@ public class GameStateManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         if (HasStateAuthority)
         {
             NetworkObject playerObject = Runner.Spawn(PlayerPrefab, Vector3.up * 2, Quaternion.identity, player);
-            Players.Add(player, playerObject.GetComponent<Player>());
+            Players.Add(player, playerObject);
         }
     }
 
@@ -56,24 +54,31 @@ public class GameStateManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         if (HasStateAuthority)
         {
-            if (Players.TryGet(player, out Player playerBehaviour))
+            if (Players.TryGet(player, out NetworkObject playerObject))
             {
                 Players.Remove(player);
-                Runner.Despawn(playerBehaviour.Object);
+                Runner.Despawn(playerObject);
+            }
+
+            if (player != Runner.LocalPlayer)
+            {
+                Debug.Log("플레이어 나가서 로비로 복귀");
+                UIManager.Singleton._MenuConnection.CurrentLobby.SetPublic();
+                Runner.LoadScene("Lobby");
             }
         }
     }
 
-    public void SpawnCharacter()
+    public void SpawnCharacter(NetworkPrefabRef prefabRef)
     {
         if (HasStateAuthority)
         {
-            foreach (KeyValuePair<PlayerRef, Player> i in Players)
+            foreach (KeyValuePair<PlayerRef, NetworkObject> i in Players)
             {
                 if (i.Value == null)
                 {
-                    NetworkObject playerObject = Runner.Spawn(PlayerPrefab, Vector3.up * 2, Quaternion.identity, i.Key);
-                    Players.Set(i.Key, playerObject.GetComponent<Player>());
+                    NetworkObject playerObject = Runner.Spawn(prefabRef, Vector3.up * 2, Quaternion.identity, i.Key);
+                    Players.Set(i.Key, playerObject);
                 }
             }
         }

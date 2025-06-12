@@ -87,6 +87,8 @@ public class UIManager : MonoBehaviour
         VideoList = VideoListOriginal;
         episodeText.text = VideoList[0].ToString();
         episodeText2.text = VideoList[1].ToString();
+
+        Application.targetFrameRate = 40;
     }
 
     private void Update()
@@ -497,14 +499,14 @@ public class UIManager : MonoBehaviour
         HideChat();
     }
 
-    public void UpdateLeaderboard(KeyValuePair<Fusion.PlayerRef, Player>[] players)
+    public void UpdateLeaderboard(KeyValuePair<Fusion.PlayerRef, NetworkObject>[] players)
     {
         for (int i = 0; i < leaderboardItems.Length; i++)
         {
             if (i < players.Length)
             {
                 leaderboardItems[i].playerRef = players[i].Key;
-                leaderboardItems[i].nameText.text = players[i].Value.SteamName;
+                leaderboardItems[i].nameText.text = players[i].Value.GetComponent<Player>().SteamName;
                 if (LocalPlayer.HasStateAuthority && leaderboardItems[i].playerRef != LocalPlayer.Runner.LocalPlayer)
                 {
                     leaderboardItems[i].kickButton.gameObject.SetActive(true);

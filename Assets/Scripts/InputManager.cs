@@ -110,23 +110,9 @@ public class InputManager : SimulationBehaviour, IBeforeUpdate, INetworkRunnerCa
 
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
 
-    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
-    {
-        if (player == runner.LocalPlayer)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-    }
+    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
 
-    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) 
-    {
-        if (runner.IsServer && player != runner.LocalPlayer)
-        {
-            Debug.Log("플레이어 나가서 로비로 복귀");
-            runner.LoadScene("Lobby");
-        }
-    }
+    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
 
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
 

@@ -34,6 +34,7 @@ public class Player : NetworkBehaviour
     public Queue<PlayerRef> KickPlayerQueue = new();
     public Queue<PlayerRef> AuthFailedPlayerQueue = new();
     public Queue<byte> CharacterQueue = new();
+    public Queue<(Vector3, Quaternion, bool, bool)> TeleportQueue = new();
     public bool IsReady;
     public bool EquipItemFlag;
 
@@ -163,6 +164,7 @@ public class Player : NetworkBehaviour
                 Kcc.SetDynamicVelocity(Vector3.zero); // 점프 멈추기
                 Kcc.SetExternalVelocity(Vector3.zero);
                 IsGround = true;
+                Direction = 0;
             }
 
             Kcc.AddLookRotation(input.LookDelta * lookSensitivity, -maxPitch, maxPitch);
@@ -184,6 +186,11 @@ public class Player : NetworkBehaviour
         if (HasStateAuthority && HasInputAuthority && Runner.IsForward)
         {
             CheckKickPlayer();
+        }
+
+        if (HasStateAuthority && Runner.IsForward)
+        {
+            CheckTeleport();
         }
     }
 
@@ -345,7 +352,7 @@ public class Player : NetworkBehaviour
                 }
             }
             // 플레이어
-            else if (hitInfo.collider.transform.parent != null && hitInfo.collider.transform.parent.TryGetComponent(out Player player))
+            else if (hitInfo.collider.transform.parent != null && hitInfo.collider.transform.parent.TryGetComponent(out Player player) && player != this)
             {
                 UIManager.Singleton.MouseText.text = player.SteamName;
             }
@@ -520,12 +527,21 @@ public class Player : NetworkBehaviour
         }
     }
 
-    public void Teleport(Vector3 position, Quaternion rotation, bool preservePitch = false, bool preserveYaw = false)
+    private void Teleport(Vector3 position, Quaternion rotation, bool preservePitch = false, bool preserveYaw = false)
     {
         if (Runner.IsForward)
         {
             Kcc.SetPosition(position);
             Kcc.SetLookRotation(rotation, preservePitch, preserveYaw);
+        }
+    }
+
+    private void CheckTeleport()
+    {
+        while (TeleportQueue.Count > 0)
+        {
+            var (position, rotation, pitch, yaw) = TeleportQueue.Dequeue();
+            Teleport(position, rotation, pitch, yaw);
         }
     }
 

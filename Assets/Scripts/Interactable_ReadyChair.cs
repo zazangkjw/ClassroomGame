@@ -25,7 +25,7 @@ public class Interactable_ReadyChair : Interactable
                 player.IsBlockMovement = true;
                 player.IsHideCollider = true;
                 player.Hide();
-                player.Teleport(transform.position.OnlyXZ(), unreadyPoint.rotation);
+                player.TeleportQueue.Enqueue((transform.position.OnlyXZ(), unreadyPoint.rotation, false, false));
             }
             else if (owner == player && player.IsReady)
             {
@@ -34,7 +34,7 @@ public class Interactable_ReadyChair : Interactable
                 player.IsBlockMovement = false;
                 player.IsHideCollider = false;
                 player.Hide();
-                player.Teleport(unreadyPoint.position, unreadyPoint.rotation);
+                player.TeleportQueue.Enqueue((unreadyPoint.position, unreadyPoint.rotation, false, false));
             }
         }
     }

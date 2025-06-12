@@ -1,9 +1,10 @@
 using Fusion;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class GameLogicCornerGame : NetworkBehaviour
 {
+    public NetworkPrefabRef PlayerPrefab;
+
     [Networked] public bool IsStarted { get; set; }
 
     [SerializeField] private Corner[] corners;
@@ -12,24 +13,18 @@ public class GameLogicCornerGame : NetworkBehaviour
     {
         Runner.SetIsSimulated(Object, true);
 
-        if (Runner.IsServer)
+        if (Runner.IsServer && Runner.IsForward)
         {
-            GameStateManager.Singleton.SpawnCharacter();
-
-            // 플레이어에게 컴포넌트 추가
-            foreach(var player in GameStateManager.Singleton.Players)
-            {
-                player.Value.AddComponent<CornerGamePlayer>();
-            }
+            GameStateManager.Singleton.SpawnCharacter(PlayerPrefab);
         }
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (Runner.IsServer)
+        if (Runner.IsServer && Runner.IsForward)
         {
             // 로딩 다 될 때까지 대기 후 연출 시작
-            if (Runner.IsForward && GameStateManager.Singleton.IsAllLoaded)
+            if (GameStateManager.Singleton.IsAllLoaded)
             {
                 GameStateManager.Singleton.IsAllLoaded = false;
                 // rpc로 연출 시작 신호
@@ -63,6 +58,17 @@ public class GameLogicCornerGame : NetworkBehaviour
             {
                 corner.CornerText.gameObject.SetActive(false);
             }
+
+            RPC_HideCornerText();
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
+    private void RPC_HideCornerText()
+    {
+        foreach (var corner in corners)
+        {
+            corner.CornerText.gameObject.SetActive(false);
         }
     }
 }

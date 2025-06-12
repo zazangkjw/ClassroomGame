@@ -6,6 +6,8 @@ using UnityEngine.Video;
 
 public class GameLogicLobby : NetworkBehaviour
 {
+    public NetworkPrefabRef PlayerPrefab;
+
     [SerializeField] private Collider[] readyChairColliders;
     [SerializeField] private Light thunderLight;
     [SerializeField] private AudioSource thunderSfx;
@@ -27,7 +29,7 @@ public class GameLogicLobby : NetworkBehaviour
 
         if (Runner.IsServer && !UIManager.Singleton.IsFirstJoin)
         {
-            GameStateManager.Singleton.SpawnCharacter();
+            GameStateManager.Singleton.SpawnCharacter(PlayerPrefab);
         }
     }
 
@@ -54,7 +56,7 @@ public class GameLogicLobby : NetworkBehaviour
     {
         foreach (var player in GameStateManager.Singleton.Players)
         {
-            if (!player.Value.IsReady)
+            if (!player.Value.GetComponent<Player>().IsReady)
             {
                 if (IsCountdown)
                 {

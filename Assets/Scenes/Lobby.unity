@@ -829,7 +829,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c326d796288440747b2ca67d113da5da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab:
+  PlayerPrefab:
     RawGuidValue: fd5e6aaef62cee4478ee1fedbd256007
   readyChairColliders:
   - {fileID: 698238835}
