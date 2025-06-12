@@ -158,9 +158,11 @@ public class Player : NetworkBehaviour
             }
             else
             {
+                Kcc.SetInputDirection(Vector3.zero);
                 Kcc.SetKinematicVelocity(Vector3.zero); // ¿Ãµø ∏ÿ√ﬂ±‚
                 Kcc.SetDynamicVelocity(Vector3.zero); // ¡°«¡ ∏ÿ√ﬂ±‚
                 Kcc.SetExternalVelocity(Vector3.zero);
+                IsGround = true;
             }
 
             Kcc.AddLookRotation(input.LookDelta * lookSensitivity, -maxPitch, maxPitch);
