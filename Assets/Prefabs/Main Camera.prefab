@@ -287,7 +287,7 @@ Light:
   m_InnerSpotAngle: 5
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 1
+    m_Type: 0
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -351,8 +351,8 @@ MonoBehaviour:
   m_LightDimmer: 1
   m_VolumetricDimmer: 5
   m_LightUnit: 4
-  m_FadeDistance: 10000
-  m_VolumetricFadeDistance: 10000
+  m_FadeDistance: 2
+  m_VolumetricFadeDistance: 2
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0

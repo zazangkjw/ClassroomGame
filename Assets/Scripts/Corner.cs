@@ -15,7 +15,13 @@ public class Corner : SimulationBehaviour
     {
         if (other.transform.parent.TryGetComponent(out CornerGamePlayer player))
         {
-            if (gameLogicCornerGame.IsStarted)
+            ThisCornerPlayers.Add(player);
+
+            if (!gameLogicCornerGame.IsStarted)
+            {
+                CornerText.text = $"{ThisCornerPlayers.Count} / {(Number == 0 ? 2 : 1)}";
+            }
+            else
             {
                 if (player.IsTagger && player.Goal == Number)
                 {
@@ -24,24 +30,24 @@ public class Corner : SimulationBehaviour
                     player.IsTagger = false;
                 }
             }
-
-            ThisCornerPlayers.Add(player);
-            CornerText.text = $"{ThisCornerPlayers.Count} / {(Number == 0 ? 2 : 1)}";
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.transform.parent.TryGetComponent(out CornerGamePlayer player))
+        if (other.transform.parent.TryGetComponent(out CornerGamePlayer cornerGamePlayer))
         {
-            ThisCornerPlayers.Remove(player);
-            CornerText.text = $"{ThisCornerPlayers.Count} / {(Number == 0 ? 2 : 1)}";
+            ThisCornerPlayers.Remove(cornerGamePlayer);
 
-            if (gameLogicCornerGame.IsStarted)
+            if (!gameLogicCornerGame.IsStarted)
             {
-                if (!player.IsTagger)
+                CornerText.text = $"{ThisCornerPlayers.Count} / {(Number == 0 ? 2 : 1)}";
+            }
+            else
+            {
+                if (!cornerGamePlayer.IsTagger && cornerGamePlayer.TryGetComponent(out Player player) && player.HasStateAuthority)
                 {
-                    player.GetComponent<Player>().TeleportQueue.Enqueue((transform.position, player.transform.rotation, true, true));
+                    player.TeleportQueue.Enqueue((transform.position, cornerGamePlayer.transform.rotation, true, true));
                 }
             }
         }

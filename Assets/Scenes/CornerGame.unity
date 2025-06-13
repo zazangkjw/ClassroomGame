@@ -192,12 +192,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PlayerPrefab:
     RawGuidValue: a1b991fd6733dc64784e8257705c86bd
+  NPC:
+    RawGuidValue: 6b9e6b6384ffc8c47b6939572f5d025a
   _IsStarted: 0
   corners:
   - {fileID: 594596306}
   - {fileID: 1960155045}
   - {fileID: 356326705}
   - {fileID: 1175764093}
+  npcs: []
 --- !u!64 &64865403
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1151,13 +1154,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Intensity: 5
+  m_Intensity: 12
   m_EnableSpotReflector: 1
   m_LuxAtDistance: 1
   m_InnerSpotPercent: 0
   m_SpotIESCutoffPercent: 100
   m_LightDimmer: 1
-  m_VolumetricDimmer: 1
+  m_VolumetricDimmer: 2
   m_LightUnit: 4
   m_FadeDistance: 30
   m_VolumetricFadeDistance: 10000
@@ -1170,7 +1173,7 @@ MonoBehaviour:
   m_ShapeRadius: 0.025
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
-  m_CustomSpotLightShadowCone: 30
+  m_CustomSpotLightShadowCone: 1
   m_MaxSmoothness: 0.99
   m_ApplyRangeAttenuation: 1
   m_DisplayAreaLightEmissiveMesh: 0
@@ -1258,7 +1261,7 @@ MonoBehaviour:
   m_ObsoleteUseShadowQualitySettings: 0
   m_ObsoleteCustomShadowResolution: 512
   m_ObsoleteContactShadows: 0
-  m_PointlightHDType: 1
+  m_PointlightHDType: 0
   m_SpotLightShape: 0
   m_AreaLightShape: 0
 --- !u!108 &861153291
@@ -1270,13 +1273,13 @@ Light:
   m_GameObject: {fileID: 861153288}
   m_Enabled: 1
   serializedVersion: 10
-  m_Type: 2
+  m_Type: 0
   m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 4
-  m_Range: 13
-  m_SpotAngle: 30
-  m_InnerSpotAngle: 21.80208
+  m_Intensity: 512
+  m_Range: 20
+  m_SpotAngle: 179
+  m_InnerSpotAngle: 1
   m_CookieSize: 10
   m_Shadows:
     m_Type: 1
@@ -1319,7 +1322,7 @@ Light:
   m_ColorTemperature: 6570
   m_UseColorTemperature: 1
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 13}
-  m_UseBoundingSphereOverride: 1
+  m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -6242,6 +6245,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1700537654}
+    - targetCorrespondingSourceObject: {fileID: -5863156357417687581, guid: 69185bca69e7ebd4682a1ecf4fb9cf10,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1700537656}
     - targetCorrespondingSourceObject: {fileID: 4820542772251406005, guid: 69185bca69e7ebd4682a1ecf4fb9cf10,
         type: 3}
       insertIndex: -1
@@ -6411,6 +6418,37 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 3833889208564203372, guid: 69185bca69e7ebd4682a1ecf4fb9cf10, type: 3}
+--- !u!114 &1700537656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1700537649}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.06666667
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: 1aedcb57e9384b749a42c3795d013ef5, type: 2}
+  m_BuildHeightMesh: 0
 --- !u!1 &1755028676
 GameObject:
   m_ObjectHideFlags: 1

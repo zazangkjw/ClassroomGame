@@ -65,7 +65,7 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 2
   anisotropy:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
   sliceDistributionUniformity:
     m_OverrideState: 0
