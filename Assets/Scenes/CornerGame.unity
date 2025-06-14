@@ -194,12 +194,12 @@ MonoBehaviour:
     RawGuidValue: a1b991fd6733dc64784e8257705c86bd
   NPC:
     RawGuidValue: 6b9e6b6384ffc8c47b6939572f5d025a
-  _IsStarted: 0
-  corners:
+  Corners:
   - {fileID: 594596306}
   - {fileID: 1960155045}
   - {fileID: 356326705}
   - {fileID: 1175764093}
+  _IsStarted: 0
   npcs: []
 --- !u!64 &64865403
 MeshCollider:

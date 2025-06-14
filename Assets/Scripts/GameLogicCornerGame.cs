@@ -8,10 +8,9 @@ public class GameLogicCornerGame : NetworkBehaviour
 {
     public NetworkPrefabRef PlayerPrefab;
     public NetworkPrefabRef NPC;
+    public Corner[] Corners;
 
     [Networked] public bool IsStarted { get; set; }
-
-    [SerializeField] private Corner[] corners;
 
     [SerializeField] private List<NavMeshAgent> npcs = new();
 
@@ -27,6 +26,8 @@ public class GameLogicCornerGame : NetworkBehaviour
             {
                 NetworkObject npc = Runner.Spawn(NPC, Vector3.up * 2, Quaternion.identity);
                 npcs.Add(npc.GetComponent<NavMeshAgent>());
+                npc.GetComponent<CornerGamePlayer>()._GameLogicCornerGame = this;
+                npc.GetComponent<CornerGamePlayer>().Goal = 3 - i;
             }
         }
     }
@@ -40,12 +41,6 @@ public class GameLogicCornerGame : NetworkBehaviour
             if (!IsStarted)
             {
                 CheckCornerIsFull();
-
-                // 네브메쉬 각 코너로 이동. 0번은 3번코너, 1번은 2번코너, 2번은 1번코너, 3번은 0번코너
-                for (int i = 0; i < npcs.Count; i++)
-                {
-                    npcs[i].SetDestination(corners[3 - i].transform.position);
-                }
             }
         }
     }
@@ -61,7 +56,7 @@ public class GameLogicCornerGame : NetworkBehaviour
 
     private void CheckCornerIsFull()
     {
-        foreach (var corner in corners)
+        foreach (var corner in Corners)
         {
             if (corner.ThisCornerPlayers.Count == 0)
             {
@@ -69,22 +64,22 @@ public class GameLogicCornerGame : NetworkBehaviour
             }
         }
 
-        if (corners[0].ThisCornerPlayers.Count >= 2)
+        if (Corners[0].ThisCornerPlayers.Count >= 2)
         {
             Debug.Log("게임 시작");
             IsStarted = true;
-            if (!corners[0].ThisCornerPlayers[0].NPC)
+            if (!Corners[0].ThisCornerPlayers[0].NPC)
             {
-                corners[0].ThisCornerPlayers[0].Goal = 1;
-                corners[0].ThisCornerPlayers[0].IsTagger = true;
+                Corners[0].ThisCornerPlayers[0].Goal = 1;
+                Corners[0].ThisCornerPlayers[0].IsTagger = true;
             }
             else
             {
-                corners[0].ThisCornerPlayers[1].Goal = 1;
-                corners[0].ThisCornerPlayers[1].IsTagger = true;
+                Corners[0].ThisCornerPlayers[1].Goal = 1;
+                Corners[0].ThisCornerPlayers[1].IsTagger = true;
             }
 
-            foreach (var corner in corners)
+            foreach (var corner in Corners)
             {
                 corner.CornerText.gameObject.SetActive(false);
             }
@@ -96,7 +91,7 @@ public class GameLogicCornerGame : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
     private void RPC_HideCornerText()
     {
-        foreach (var corner in corners)
+        foreach (var corner in Corners)
         {
             corner.CornerText.gameObject.SetActive(false);
         }
