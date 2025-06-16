@@ -26,6 +26,7 @@ public class UIManager : MonoBehaviour
     public List<GameObject> CharactersPOV = new();
     public byte CharacterIndex;
     public bool IsFirstJoin;
+    public RawImage BlackImage;
 
     [SerializeField] private GameObject inventoryScreen;
     [SerializeField] private GameObject pauseScreen;
@@ -65,6 +66,8 @@ public class UIManager : MonoBehaviour
     private Queue<GameObject> chatList = new();
     private GameObject chat;
     private int selectedKickIndex;
+    private WaitForSeconds wait = new WaitForSeconds(0.05f);
+    private Coroutine blackCoroutine;
 
     private void Awake()
     {
@@ -585,5 +588,45 @@ public class UIManager : MonoBehaviour
     public void PlayOnClickSound()
     {
         audioSource.PlayOneShot(onClickSound);
+    }
+
+    public void Black()
+    {
+        if (blackCoroutine != null)
+        {
+            StopCoroutine(blackCoroutine);
+        }
+        blackCoroutine = StartCoroutine(BlackRoutine());
+    }
+
+    private IEnumerator BlackRoutine()
+    {
+        while (UIManager.Singleton.BlackImage.color.a < 1)
+        {
+            UIManager.Singleton.BlackImage.color = new Color(0, 0, 0, UIManager.Singleton.BlackImage.color.a + (10f / 255f));
+            yield return wait;
+        }
+
+        blackCoroutine = null;
+    }
+
+    public void UnBlack()
+    {
+        if (blackCoroutine != null)
+        {
+            StopCoroutine(blackCoroutine);
+        }
+        blackCoroutine = StartCoroutine(UnBlackRoutine());
+    }
+
+    private IEnumerator UnBlackRoutine()
+    {
+        while (UIManager.Singleton.BlackImage.color.a > 0)
+        {
+            UIManager.Singleton.BlackImage.color = new Color(0, 0, 0, UIManager.Singleton.BlackImage.color.a - (10f / 255f));
+            yield return wait;
+        }
+
+        blackCoroutine = null;
     }
 }

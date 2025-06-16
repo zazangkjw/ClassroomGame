@@ -9,8 +9,8 @@ EditorBuildSettings:
     path: Assets/Scenes/Main.unity
     guid: 8124e5870f4fd4c779e7a5f994e84ad1
   - enabled: 1
-    path: Assets/Scenes/Lobby.unity
-    guid: 428d4c847d56a994090a3aedeb803e41
+    path: Assets/Scenes/LivingRoom.unity
+    guid: c55ad1f5d6e04bb42a3eae8b1ed5692b
   - enabled: 1
     path: Assets/Scenes/CornerGame.unity
     guid: 2444089f96e477c4a881f4c6793ee575

@@ -116,7 +116,7 @@ public class Player : NetworkBehaviour
             }
 
             // 첫 입장 시, 캐릭터 선택창 켜기
-            if (UIManager.Singleton.IsFirstJoin && SceneManager.GetActiveScene().name == "Lobby")
+            if (UIManager.Singleton.IsFirstJoin && SceneManager.GetActiveScene().name == "LivingRoom")
             {
                 UIManager.Singleton.OpenCharacterScreen(true);
                 UIManager.Singleton.IsFirstJoin = false;
