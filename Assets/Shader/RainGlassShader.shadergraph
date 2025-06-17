@@ -69,12 +69,6 @@
             "m_Id": "5b588b27ffc24fc198886f69bdd31592"
         },
         {
-            "m_Id": "f69802ccdedb45649af1ae46a3b6c462"
-        },
-        {
-            "m_Id": "189b1896c6cc45449aaa7ee6184498b8"
-        },
-        {
             "m_Id": "a6fcbf72182f449cbe67822ab64d4c38"
         }
     ],
@@ -229,12 +223,6 @@
             },
             {
                 "m_Id": "5b588b27ffc24fc198886f69bdd31592"
-            },
-            {
-                "m_Id": "f69802ccdedb45649af1ae46a3b6c462"
-            },
-            {
-                "m_Id": "189b1896c6cc45449aaa7ee6184498b8"
             },
             {
                 "m_Id": "a6fcbf72182f449cbe67822ab64d4c38"
@@ -491,40 +479,6 @@
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
     "m_Labels": []
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.BlockNode",
-    "m_ObjectId": "189b1896c6cc45449aaa7ee6184498b8",
-    "m_Group": {
-        "m_Id": ""
-    },
-    "m_Name": "SurfaceDescription.RefractionDistance",
-    "m_DrawState": {
-        "m_Expanded": true,
-        "m_Position": {
-            "serializedVersion": "2",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 0.0,
-            "height": 0.0
-        }
-    },
-    "m_Slots": [
-        {
-            "m_Id": "faa6406bfc1541a295695b67220b0d72"
-        }
-    ],
-    "synonyms": [],
-    "m_Precision": 0,
-    "m_PreviewExpanded": true,
-    "m_DismissedVersion": 0,
-    "m_PreviewMode": 0,
-    "m_CustomColors": {
-        "m_SerializableColors": []
-    },
-    "m_SerializedDescriptor": "SurfaceDescription.RefractionDistance"
 }
 
 {
@@ -1639,36 +1593,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.ColorRGBMaterialSlot",
-    "m_ObjectId": "b421b540ce654394950dbba88449ed79",
-    "m_Id": 0,
-    "m_DisplayName": "Transmittance Color",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "RefractionColor",
-    "m_StageCapability": 2,
-    "m_Value": {
-        "x": 1.0,
-        "y": 1.0,
-        "z": 1.0
-    },
-    "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-    },
-    "m_Labels": [],
-    "m_ColorMode": 0,
-    "m_DefaultColor": {
-        "r": 1.0,
-        "g": 1.0,
-        "b": 1.0,
-        "a": 1.0
-    }
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.CategoryData",
     "m_ObjectId": "b690fa7fd5a4450593960405cff1fce4",
     "m_Name": "",
@@ -1898,7 +1822,7 @@
     "m_ObjectId": "e8af83693aa243aeb8dfc59f4cd45c7b",
     "m_RayTracing": false,
     "m_MaterialType": 0,
-    "m_RefractionModel": 1,
+    "m_RefractionModel": 0,
     "m_SSSTransmission": true,
     "m_EnergyConservingSpecular": true,
     "m_ClearCoat": false
@@ -1997,40 +1921,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.BlockNode",
-    "m_ObjectId": "f69802ccdedb45649af1ae46a3b6c462",
-    "m_Group": {
-        "m_Id": ""
-    },
-    "m_Name": "SurfaceDescription.RefractionColor",
-    "m_DrawState": {
-        "m_Expanded": true,
-        "m_Position": {
-            "serializedVersion": "2",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 0.0,
-            "height": 0.0
-        }
-    },
-    "m_Slots": [
-        {
-            "m_Id": "b421b540ce654394950dbba88449ed79"
-        }
-    ],
-    "synonyms": [],
-    "m_Precision": 0,
-    "m_PreviewExpanded": true,
-    "m_DismissedVersion": 0,
-    "m_PreviewMode": 0,
-    "m_CustomColors": {
-        "m_SerializableColors": []
-    },
-    "m_SerializedDescriptor": "SurfaceDescription.RefractionColor"
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.PositionMaterialSlot",
     "m_ObjectId": "f75de5c4311d467a9c3f71ef666e6d10",
     "m_Id": 0,
@@ -2111,21 +2001,6 @@
     "m_NormalMapSpace": 0,
     "m_EnableGlobalMipBias": true,
     "m_MipSamplingMode": 0
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "faa6406bfc1541a295695b67220b0d72",
-    "m_Id": 0,
-    "m_DisplayName": "Absorption Distance",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "RefractionDistance",
-    "m_StageCapability": 2,
-    "m_Value": 1.0,
-    "m_DefaultValue": 1.0,
-    "m_Labels": []
 }
 
 {

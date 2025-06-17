@@ -13,7 +13,6 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Singleton;
 
-    public String Name => nameInputField.text;
     public Player LocalPlayer;
     public byte UIStack;
     public TextMeshProUGUI MouseText;
@@ -27,10 +26,13 @@ public class UIManager : MonoBehaviour
     public byte CharacterIndex;
     public bool IsFirstJoin;
     public RawImage BlackImage;
+    public GameObject SelectModeScreen;
+    public GameObject LoadingImage;
+    public GameObject Background;
+    public GameObject SkipText;
 
     [SerializeField] private GameObject inventoryScreen;
     [SerializeField] private GameObject pauseScreen;
-    [SerializeField] private TMP_InputField nameInputField;
     [SerializeField] private List<Slot> itemSlots = new();
     [SerializeField] private GraphicRaycaster uiRaycaster;
     [SerializeField] private EventSystem eventSystem;
@@ -57,6 +59,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject characterScreen;
     [SerializeField] private TextMeshProUGUI episodeText;
     [SerializeField] private TextMeshProUGUI episodeText2;
+    [SerializeField] private TextMeshProUGUI titleText;
 
     private PointerEventData pointerData;
     private List<RaycastResult> uiRaycasterResults = new();
@@ -66,7 +69,6 @@ public class UIManager : MonoBehaviour
     private Queue<GameObject> chatList = new();
     private GameObject chat;
     private int selectedKickIndex;
-    private WaitForSeconds wait = new WaitForSeconds(0.05f);
     private Coroutine blackCoroutine;
 
     private void Awake()
@@ -601,10 +603,10 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator BlackRoutine()
     {
-        while (UIManager.Singleton.BlackImage.color.a < 1)
+        while (BlackImage.color.a < 1)
         {
-            UIManager.Singleton.BlackImage.color = new Color(0, 0, 0, UIManager.Singleton.BlackImage.color.a + (10f / 255f));
-            yield return wait;
+            BlackImage.color = new Color(0, 0, 0, BlackImage.color.a + (1f / 2f) * Time.deltaTime);
+            yield return null;
         }
 
         blackCoroutine = null;
@@ -621,12 +623,26 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator UnBlackRoutine()
     {
-        while (UIManager.Singleton.BlackImage.color.a > 0)
+        while (BlackImage.color.a > 0)
         {
-            UIManager.Singleton.BlackImage.color = new Color(0, 0, 0, UIManager.Singleton.BlackImage.color.a - (10f / 255f));
-            yield return wait;
+            BlackImage.color = new Color(0, 0, 0, BlackImage.color.a - (1f / 2f) * Time.deltaTime);
+            yield return null;
         }
 
         blackCoroutine = null;
+    }
+
+    public void TitleDisappear()
+    {
+        StartCoroutine(TitleDisappearRoutine());
+    }
+
+    private IEnumerator TitleDisappearRoutine()
+    {
+        while (titleText.color.a > 0)
+        {
+            titleText.color = new Color(1, 1, 1, titleText.color.a - (1f / 3f) * Time.deltaTime);
+            yield return null;
+        }
     }
 }
